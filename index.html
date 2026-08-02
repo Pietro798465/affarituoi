@@ -121,6 +121,29 @@ h1.brand{
 .role-btn{display:flex; align-items:center; gap:10px; width:100%; margin-bottom:8px; justify-content:flex-start; text-align:left;}
 .role-btn .ic{font-size:20px;}
 
+.mini-box-deco{
+  width:56px; height:44px; margin:0 auto 4px; position:relative; border-radius:6px;
+  background:
+    linear-gradient(90deg, transparent 46%, rgba(120,80,30,.55) 46%, rgba(120,80,30,.55) 54%, transparent 54%),
+    linear-gradient(0deg, transparent 46%, rgba(120,80,30,.55) 46%, rgba(120,80,30,.55) 54%, transparent 54%),
+    linear-gradient(150deg,#4f95c9,#2f6fa8 55%,#1d4f80);
+  border:2px solid #163f66; box-shadow:0 4px 10px rgba(0,0,0,.4);
+}
+.mini-box-deco::before{
+  content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%);
+  width:16px; height:16px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #e14b4b, #7a0f12 75%);
+  box-shadow:0 2px 4px rgba(0,0,0,.5);
+}
+.mini-box-deco span{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:16px; color:#2b1d0e;
+}
+.mini-box-deco span::before{
+  content:""; position:absolute; width:22px; height:16px; background:linear-gradient(180deg,#e8d9b5,#c9a96e);
+  border-radius:4px; z-index:-1;
+}
+
 /* ---------- main layout ---------- */
 .main-layout{
   display:grid; grid-template-columns:150px 1fr 150px; gap:12px;
@@ -150,6 +173,17 @@ h1.brand{
 .round-dot{width:9px; height:9px; border-radius:50%; background:var(--off); border:1px solid var(--line);}
 .round-dot.done{background:var(--gold);}
 .round-dot.active{background:var(--doctor); box-shadow:0 0 8px var(--doctor);}
+
+.call-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:10px;}
+@media (min-width:480px){ .call-stats{grid-template-columns:repeat(4,1fr);} }
+.stat-card{
+  background:linear-gradient(180deg, var(--panel-2), var(--panel));
+  border:1px solid var(--gold); border-radius:10px; padding:6px 4px; text-align:center;
+}
+.stat-card .stat-label{font-size:8.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim); font-weight:700; display:block;}
+.stat-card .stat-value{font-family:'Bebas Neue',sans-serif; font-size:19px; color:var(--gold); letter-spacing:1px; display:block; margin-top:2px;}
+.call-stats.deal-secured{grid-template-columns:1fr; }
+.call-stats.deal-secured .stat-card{border-color:var(--teal);}
 .status-actions{margin-top:10px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;}
 
 .boxes-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px;}
@@ -157,11 +191,11 @@ h1.brand{
 
 .box-card{
   background:
-    linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.06)) 0 0/100% 3px no-repeat,
+    linear-gradient(rgba(255,255,255,.10), rgba(255,255,255,.10)) 0 0/100% 3px no-repeat,
     linear-gradient(90deg, transparent 46%, rgba(120,80,30,.55) 46%, rgba(120,80,30,.55) 54%, transparent 54%),
     linear-gradient(0deg, transparent 46%, rgba(120,80,30,.55) 46%, rgba(120,80,30,.55) 54%, transparent 54%),
-    linear-gradient(150deg,#e8d9b5,#c9a96e 55%,#b5905a);
-  border:2px solid #8a6a3a; border-radius:8px; padding:10px 4px 6px;
+    linear-gradient(150deg,#4f95c9,#2f6fa8 55%,#1d4f80);
+  border:2px solid #163f66; border-radius:8px; padding:10px 4px 6px;
   min-height:88px; display:flex; flex-direction:column; justify-content:center; align-items:center;
   cursor:pointer; text-align:center; position:relative; overflow:hidden;
   transition:transform .15s ease, box-shadow .15s ease;
@@ -170,7 +204,7 @@ h1.brand{
 .box-card::before{ /* ceralacca */
   content:""; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
   width:22px; height:22px; border-radius:50%;
-  background:radial-gradient(circle at 35% 30%, #d94040, #7a0f12 75%);
+  background:radial-gradient(circle at 35% 30%, #e14b4b, #7a0f12 75%);
   box-shadow:0 2px 4px rgba(0,0,0,.5);
 }
 .box-card:not(.opened):hover{transform:translateY(-3px); box-shadow:0 8px 18px rgba(0,0,0,.5);}
@@ -185,14 +219,14 @@ h1.brand{
 @keyframes flip{from{transform:rotateY(90deg); opacity:0;} to{transform:rotateY(0); opacity:.55;}}
 
 .b-num{
-  font-family:'Bebas Neue',sans-serif; font-size:19px; letter-spacing:1px; color:#fff;
-  background:linear-gradient(180deg,#1f6fd6,#0a3f8c); border-radius:6px; padding:1px 10px;
-  box-shadow:0 2px 4px rgba(0,0,0,.4); margin-top:2px;
+  font-family:'Bebas Neue',sans-serif; font-size:19px; letter-spacing:1px; color:#2b1d0e;
+  background:linear-gradient(180deg,#e8d9b5,#c9a96e); border-radius:5px; padding:1px 11px;
+  box-shadow:0 2px 4px rgba(0,0,0,.4), inset 0 0 0 1px rgba(120,90,40,.5); margin-top:2px;
 }
-.box-card.opened .b-num{background:#333;}
-.b-region{font-size:10px; margin-top:4px; color:#3a2a12; font-weight:700;}
+.box-card.opened .b-num{background:#333; color:var(--gold);}
+.b-region{font-size:10px; margin-top:4px; color:#eaf3ff; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,.4);}
 .box-card.opened .b-region{color:#cfe0ff;}
-.b-player{font-size:9px; color:#5c431f; margin-top:1px; font-style:italic; opacity:.85;}
+.b-player{font-size:9px; color:#cfe0ff; margin-top:1px; font-style:italic; opacity:.85;}
 .box-card.opened .b-player{color:#8fd3ff;}
 .b-value{color:var(--gold-2); background:#0a1533; border-radius:6px; padding:1px 6px; font-weight:800; margin-top:3px; font-size:12.5px;}
 
@@ -262,7 +296,9 @@ h1.brand{
 <!-- ROLE MODAL -->
 <div id="role-modal" class="modal-overlay">
   <div class="modal-body">
-    <h2>BENVENUTI</h2>
+    <div class="mini-box-deco" aria-hidden="true"><span>?</span></div>
+    <h1 class="brand" style="margin:4px 0 0;">AFFARI TUOI</h1>
+    <h2 style="margin-top:2px;">BENVENUTI</h2>
     <p>Scegli come vuoi giocare stasera</p>
 
     <div class="role-group">
@@ -310,7 +346,7 @@ h1.brand{
     <div class="status-box">
       <span class="room-tag" id="room-display">Modalità: IA</span>
       <div id="game-status">Seleziona il tuo pacco iniziale!</div>
-      <div class="round-track" id="round-track"></div>
+      <div class="call-stats" id="round-track"></div>
       <div class="status-actions">
         <button class="btn small" id="btn-edit-names" onclick="editPlayerNames()">✏️ Nomi</button>
         <button class="btn small danger" onclick="triggerCliffhanger()">🎬 Manciata di secondi...</button>
@@ -354,6 +390,14 @@ h1.brand{
     <div class="phone-icon">☎️</div>
     <h2 style="color:var(--doctor);">IL DOTTORE STA CHIAMANDO</h2>
     <div id="doctor-quote-box" style="font-style:italic; color:var(--gold-2); margin:10px 0; font-size:14px;"></div>
+
+    <div id="pre-offer-choice" style="display:none;">
+      <p>Prima ancora di sentire l'offerta, potete provare a chiedere voi una cifra al Dottore.</p>
+      <button class="btn teal" style="font-size:14px;" onclick="counterBeforeOffer()">🤝 Contratta prima di ascoltare</button>
+      <br><br>
+      <button class="btn ghost" onclick="revealPendingOffer()">🔊 Ascolta l'offerta del Dottore</button>
+    </div>
+
     <div id="offer-text">-</div>
 
     <div id="cards-container" style="display:none;">
@@ -367,8 +411,6 @@ h1.brand{
     <div id="standard-offer-btns">
       <button class="btn teal" style="font-size:15px; padding:11px 20px;" onclick="acceptDoctorOffer()">✅ ACCETTO</button>
       <button class="btn danger" style="font-size:13px;" onclick="rejectOffer()">❌ RIFIUTO E VADO AVANTI</button>
-      <br>
-      <button class="btn ghost small" id="btn-counter" style="margin-top:8px; display:none;" onclick="sendCounterOffer()">🤝 Contrattacca con una cifra</button>
     </div>
   </div>
 </div>
@@ -801,7 +843,7 @@ function handleDataFromHost(data){
         playPhoneRing();
         state.currentOffer = { type:'OFFERTA', amount: data.newOffer };
         setTVQuote("Dottore", "Non se ne parla nemmeno. Ecco la mia offerta definitiva.");
-        showCallModalOnDevice('OFFERTA', data.newOffer, "Non se ne parla nemmeno. Ecco la mia offerta definitiva.");
+        showCallModalOnDevice('OFFERTA', data.newOffer, "Non se ne parla nemmeno. Ecco la mia offerta definitiva.", true);
       }
     }
   } else if (data.type === 'FINAL_RESULT'){
@@ -862,15 +904,45 @@ function remainingBoardCount(){
 }
 function remainingIsOne(){ return remainingBoardCount() <= 1; }
 
+function computeRemainingEV(){
+  const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
+  if (remainingIdx.length === 0) return 0;
+  const sum = remainingIdx.reduce((a,i)=> a + state.boxes[i].value, 0);
+  return Math.round(sum / remainingIdx.length);
+}
+
 function renderRoundTrack(){
   const track = document.getElementById('round-track');
   if (state.dealSecured){
-    track.innerHTML = `<span style="color:var(--gold); font-weight:700; font-size:12px;">🔓 Offerta assicurata: ora si scoprono i pacchi rimasti per curiosità</span>`;
+    track.className = 'call-stats deal-secured';
+    track.innerHTML = `
+      <div class="stat-card">
+        <span class="stat-label">🔓 Offerta assicurata</span>
+        <span class="stat-value" style="color:var(--teal); font-size:16px;">Ora si scoprono i pacchi rimasti per curiosità</span>
+      </div>`;
     return;
   }
+  track.className = 'call-stats';
   const remaining = remainingBoardCount();
   const toGo = Math.max(0, state.roundTarget - state.openedThisRound);
-  track.innerHTML = `<span style="font-size:12px; color:var(--text-dim);">Chiamata N. ${state.callsMade+1} tra ${toGo} pacco/i · pacchi rimasti sul tabellone: ${remaining}</span>`;
+  const ev = computeRemainingEV();
+  track.innerHTML = `
+    <div class="stat-card">
+      <span class="stat-label">Aperti in questa chiamata</span>
+      <span class="stat-value">${state.openedThisRound}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Pacchi sul tabellone</span>
+      <span class="stat-value">${remaining}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Mancano alla chiamata</span>
+      <span class="stat-value">${toGo}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Valore atteso</span>
+      <span class="stat-value" style="font-size:15px;">${formatMoney(ev)}</span>
+    </div>`;
 }
 
 function renderBoard(){
@@ -997,30 +1069,50 @@ function manualCallDoctor(){
 /* ============================================================
    OFFERTE / CHIAMATA DEL DOTTORE
    ============================================================ */
-function showCallModalOnDevice(mode, amount, quote){
+function showCallModalOnDevice(mode, amount, quote, skipPreOffer){
   document.getElementById('doctor-quote-box').innerText = `"${quote}"`;
-  const counterBtn = document.getElementById('btn-counter');
+  const preOffer = document.getElementById('pre-offer-choice');
+
   if (mode === 'CARTE'){
+    preOffer.style.display = 'none';
+    document.getElementById('offer-text').style.display = 'block';
     document.getElementById('offer-text').innerText = "IL DOTTORE PROPONE: LE CARTE!";
     document.getElementById('cards-container').style.display = 'block';
     document.getElementById('standard-offer-btns').style.display = 'none';
-    counterBtn.style.display = 'none';
   } else if (mode === 'CAMBIO'){
+    preOffer.style.display = 'none';
+    document.getElementById('offer-text').style.display = 'block';
     document.getElementById('offer-text').innerText = "PROPOSTA: CAMBIO PACCO!";
     document.getElementById('cards-container').style.display = 'none';
     document.getElementById('standard-offer-btns').style.display = 'block';
-    counterBtn.style.display = 'none';
+  } else if (!skipPreOffer && state.role !== 'DOCTOR'){
+    // la contrattazione va proposta PRIMA di conoscere la cifra del Dottore
+    preOffer.style.display = 'block';
+    document.getElementById('offer-text').style.display = 'none';
+    document.getElementById('cards-container').style.display = 'none';
+    document.getElementById('standard-offer-btns').style.display = 'none';
   } else {
+    preOffer.style.display = 'none';
+    document.getElementById('offer-text').style.display = 'block';
     document.getElementById('offer-text').innerText = "OFFERTA: " + formatMoney(amount);
     document.getElementById('cards-container').style.display = 'none';
     document.getElementById('standard-offer-btns').style.display = 'block';
-    counterBtn.style.display = (state.role !== 'DOCTOR') ? 'inline-block' : 'none';
   }
   document.getElementById('doctor-call-modal').style.display = 'flex';
 }
 
-function sendCounterOffer(){
-  const amt = prompt("Che cifra vuoi chiedere al Dottore per chiudere subito?");
+/* il concorrente sceglie di ascoltare subito la cifra proposta dal Dottore */
+function revealPendingOffer(){
+  document.getElementById('pre-offer-choice').style.display = 'none';
+  document.getElementById('offer-text').style.display = 'block';
+  document.getElementById('offer-text').innerText = "OFFERTA: " + formatMoney(state.currentOffer.amount);
+  document.getElementById('cards-container').style.display = 'none';
+  document.getElementById('standard-offer-btns').style.display = 'block';
+}
+
+/* il concorrente prova a chiedere una cifra prima ancora di conoscere l'offerta del Dottore */
+function counterBeforeOffer(){
+  const amt = prompt("Che cifra vuoi chiedere al Dottore, prima ancora di sentire la sua offerta?");
   if (!amt || isNaN(amt) || Number(amt) <= 0) return;
   const amount = Number(amt);
 
@@ -1036,24 +1128,24 @@ function sendCounterOffer(){
   }
 }
 
-/* IA del Dottore decide su una contro-offerta in modalità singolo giocatore */
+/* IA del Dottore decide su una richiesta anticipata in modalità singolo giocatore */
 function resolveCounterLocally(amount){
   const base = state.currentOffer ? state.currentOffer.amount : 0;
-  const accept = amount <= base * 1.20;
+  const accept = amount <= base * 1.15;
   if (accept){
     setTVQuote("Dottore", "Va bene, accetto la vostra richiesta. Affare fatto!");
     enterRevealMode(amount);
   } else {
-    const counterBack = Math.round((base * 1.08) / 500) * 500;
+    const counterBack = Math.round((base * 1.05) / 500) * 500;
     setTVQuote("Dottore", "Non se ne parla nemmeno a quella cifra. Ecco la mia offerta definitiva.");
     alert(`❌ Il Dottore rifiuta ${formatMoney(amount)}.`);
     state.currentOffer = { type:'OFFERTA', amount: counterBack };
     playPhoneRing();
-    showCallModalOnDevice('OFFERTA', counterBack, "Ecco la mia offerta definitiva.");
+    showCallModalOnDevice('OFFERTA', counterBack, "Ecco la mia offerta definitiva.", true);
   }
 }
 
-/* applica la decisione del Dottore (umano) a una contro-offerta, lato Presentatore/host */
+/* applica la decisione del Dottore (umano) a una richiesta anticipata, lato Presentatore/host */
 function applyCounterDecision(accepted, amount, newOffer){
   if (accepted){
     broadcast({type:'COUNTER_RESPONSE', accepted:true, amount});
@@ -1214,6 +1306,8 @@ function computeOfferAmount(remainingPrizes, redRatio){
 
 function triggerAutoDoctorCall(){
   state.callsMade++;
+  state.openedThisRound = 0;
+  state.roundTarget = computeRoundTarget(state.callsMade, remainingBoardCount());
 
   let remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
   let remainingPrizes = remainingIdx.map(i => state.boxes[i].value);
@@ -1251,6 +1345,8 @@ function triggerAutoDoctorCall(){
 
   playPhoneRing();
   setTVQuote("Dottore", docQuote);
+  renderAll();
+  broadcastState();
   showCallModalOnDevice(state.currentOffer.type, state.currentOffer.amount, docQuote);
 }
 
