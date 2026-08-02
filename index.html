@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Affari Tuoi - Live TV & Multi-Device</title>
-    <!-- PeerJS per Connessione Multi-Dispositivo -->
+    <title>Affari Tuoi Live - TV Edition</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         :root {
@@ -35,7 +34,6 @@
 
         h1 { margin: 5px 0; color: var(--gold); font-size: 22px; text-align: center; }
 
-        /* Jukebox */
         .juke-box {
             display: flex;
             flex-wrap: wrap;
@@ -60,7 +58,7 @@
             cursor: pointer;
         }
 
-        /* CARD TV CONDUTTORE / TORMENTONI */
+        /* CARD TV BANNER */
         .tv-card {
             background: linear-gradient(135deg, #1e293b, #0f172a);
             border: 2px solid var(--gold);
@@ -94,7 +92,6 @@
             flex: 1;
         }
 
-        /* Container Principale */
         .main-layout {
             display: grid;
             grid-template-columns: 140px 1fr 140px;
@@ -120,7 +117,6 @@
         .p-red { background: var(--red-prize); color: var(--gold); }
         .p-off { opacity: 0.15; text-decoration: line-through; background: #222 !important; color: #777 !important; }
 
-        /* Board Grid */
         .boxes-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -173,21 +169,31 @@
             margin: 4px;
         }
 
-        /* Doctor Dashboard View */
         .doctor-view { display: none; width: 100%; max-width: 600px; }
         .secret-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         .secret-table th, .secret-table td { border: 1px solid #444; padding: 6px; text-align: center; }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.88); display: flex; justify-content: center; align-items: center;
             z-index: 1000; padding: 15px;
         }
-        .modal-body { background: var(--panel-bg); padding: 20px; border-radius: 12px; border: 2px solid var(--gold); text-align: center; max-width: 480px; width: 100%; }
+        .modal-body { 
+            background: var(--panel-bg); 
+            padding: 20px; 
+            border-radius: 14px; 
+            border: 2px solid var(--gold); 
+            text-align: center; 
+            max-width: 500px; 
+            width: 100%; 
+            box-shadow: 0 0 25px rgba(255, 183, 3, 0.3);
+        }
 
-        /* Carte Coperte */
         .cards-choice { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
         .card-item { background: #5c0d78; border: 2px solid var(--gold); padding: 25px; border-radius: 10px; font-size: 24px; cursor: pointer; font-weight: bold; }
+        
+        .swap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .swap-btn { background: #3a86ff; color: white; border: 1px solid var(--gold); padding: 10px; font-weight: bold; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -203,20 +209,24 @@
         <button class="juke-btn" style="background:#e63946" onclick="stopMusic()">⏹️ Stop Audio</button>
     </div>
 
-    <!-- CARD CONDUTTORE (STEFANO DE MARTINO) -->
+    <!-- CARD CONDUTTORE / BANNER -->
     <div class="tv-card" id="tv-card-banner">
         <span class="tv-badge" id="tv-badge">Stefano</span>
-        <div class="tv-quote" id="tv-quote">"Benvenuti ad Affari Tuoi! Selezionate i ruoli per iniziare la serata."</div>
+        <div class="tv-quote" id="tv-quote">"Benvenuti ad Affari Tuoi! Seleziona la modalità di gioco."</div>
     </div>
 
-    <!-- MODAL SCELTA RUOLO -->
+    <!-- MODAL SCELTA MODALITÀ -->
     <div id="role-modal" class="modal-overlay">
         <div class="modal-body">
             <h2>BENVENUTO AD AFFARI TUOI!</h2>
-            <p>Seleziona la modalità per questa partita:</p>
-            <button class="btn" onclick="startAsPresenter()">📺 iPad Presentatore (Crea Partita)</button>
+            <p>Come vuoi giocare stasera?</p>
+            <button class="btn" style="background:#2ec4b6; font-size:16px; padding:14px;" onclick="startAutoMode()">🎮 Gioca Subito (Dottore Automatico IA)</button>
             <br><br>
+            <hr style="border-color:#444;">
+            <p style="font-size:12px; color:#aaa;">Oppure gioca su 2 dispositivi per il gioco reale da tavolo:</p>
+            <button class="btn" onclick="startAsPresenter()">📺 iPad Presentatore (Crea Stanza)</button>
             <button class="btn" style="background:#4cc9f0" onclick="showJoinDoctor()">☎️ Smartphone Dottore (Entra)</button>
+            
             <div id="join-sec" style="display:none; margin-top:15px;">
                 <input type="text" id="room-input" placeholder="Codice Stanza (es: 1234)" style="padding:8px; font-size:16px; width:150px; text-align:center;">
                 <button class="btn" onclick="startAsDoctor()">Connetti</button>
@@ -224,17 +234,18 @@
         </div>
     </div>
 
-    <!-- VISTA PRESENTATORE / TABELLONE -->
+    <!-- VISTA TABELLONE -->
     <div id="presenter-view" class="main-layout" style="display:none;">
         <div class="prize-column" id="blue-list"></div>
 
         <div>
             <div class="status-box">
-                <span id="room-display" style="float:right; font-size:12px; color:var(--gold);">Stanza: -</span>
-                <div id="game-status">Seleziona il Pacco del Giocatore principale!</div>
+                <span id="room-display" style="float:right; font-size:12px; color:var(--gold);">Modalità: IA</span>
+                <div id="game-status">Seleziona il tuo Pacco iniziale!</div>
                 <div style="margin-top:5px;">
-                    <button class="btn" style="font-size:11px;" onclick="editPlayerNames()">✏️ Modifica Nomi</button>
-                    <button class="btn" style="font-size:11px; background:#e63946; color:white;" onclick="triggerCliffhanger()">🎬 "Ve lo dico fra una manciata di secondi"</button>
+                    <button class="btn" style="font-size:11px;" onclick="editPlayerNames()">✏️ Nomi Giocatori</button>
+                    <button class="btn" style="font-size:11px; background:#e63946; color:white;" onclick="triggerCliffhanger()">🎬 "Manciata di secondi..."</button>
+                    <button class="btn" style="font-size:11px; background:#7209b7; color:white;" onclick="triggerRegioneFortunata()">🍀 Regione Fortunata</button>
                 </div>
             </div>
 
@@ -244,7 +255,7 @@
         <div class="prize-column" id="red-list"></div>
     </div>
 
-    <!-- VISTA SCHERMO DOTTORE -->
+    <!-- VISTA SCHERMO DOTTORE (PER 2 DISPOSITIVI) -->
     <div id="doctor-view" class="doctor-view">
         <div class="status-box">
             <h2>☎️ DASHBOARD SEGRETA DOTTORE</h2>
@@ -252,12 +263,12 @@
         </div>
 
         <div style="background:#14213d; padding:12px; margin-top:10px; border-radius:8px;">
-            <h3>Invia Offerta / Azione</h3>
+            <h3>Invia Offerta al Presentatore</h3>
             <input type="number" id="offer-input" placeholder="Cifra in Euro (€)" style="padding:10px; font-size:16px; width:55%;">
             <br><br>
-            <button class="btn" style="background:#2ec4b6" onclick="sendOfferToPresenter('OFFERTA')">Offerta Cifra</button>
-            <button class="btn" style="background:#ff9f1c" onclick="sendOfferToPresenter('CAMBIO')">CAMBIO PACCO</button>
-            <button class="btn" style="background:#7209b7; color:white;" onclick="sendOfferToPresenter('CARTE')">🃏 LE CARTE</button>
+            <button class="btn" style="background:#2ec4b6" onclick="sendManualOffer('OFFERTA')">Invia Cifra</button>
+            <button class="btn" style="background:#ff9f1c" onclick="sendManualOffer('CAMBIO')">Invia CAMBIO</button>
+            <button class="btn" style="background:#7209b7; color:white;" onclick="sendManualOffer('CARTE')">Invia CARTE</button>
         </div>
 
         <h3>Contenuto Segreto Pacchi:</h3>
@@ -269,16 +280,16 @@
         </table>
     </div>
 
-    <!-- POPUP CHIAMATA DOTTORE -->
+    <!-- POPUP TV OVERLAY CARD CHIAMATA DOTTORE -->
     <div id="doctor-call-modal" class="modal-overlay" style="display:none;">
-        <div class="modal-body" style="border-color:#e63946;">
-            <h1 style="color:#e63946;">☎️ IL DOTTORE CHIAMA!</h1>
-            <div id="doctor-quote-box" style="font-style:italic; color:#ffd166; margin-bottom:10px;"></div>
-            <h2 id="offer-text" style="font-size:24px;">-</h2>
+        <div class="modal-body" style="border-color:var(--gold);">
+            <h1 style="color:#e63946;">☎️ IL DOTTORE STA CHIAMANDO!</h1>
+            <div id="doctor-quote-box" style="font-style:italic; color:#ffd166; margin:10px 0; font-size:15px;"></div>
+            <h2 id="offer-text" style="font-size:26px; color:var(--gold); margin:15px 0;">-</h2>
 
             <!-- Opzione Le Carte -->
             <div id="cards-container" style="display:none;">
-                <p>Scegli una carta coperta:</p>
+                <p>Scegli una delle due carte coperte:</p>
                 <div class="cards-choice">
                     <div class="card-item" onclick="revealCard(1)">🎴 CARTA 1</div>
                     <div class="card-item" onclick="revealCard(2)">🎴 CARTA 2</div>
@@ -286,16 +297,25 @@
             </div>
 
             <div id="standard-offer-btns">
-                <button class="btn" style="background:#2ec4b6;" onclick="closeDoctorCall(true)">ACCETTA</button>
-                <button class="btn" style="background:#e63946; color:white;" onclick="rejectOffer()">"RIFIUTO L'OFFERTA E VADO AVANTI"</button>
+                <button class="btn" style="background:#2ec4b6; font-size:16px; padding:10px 20px;" onclick="acceptDoctorOffer()">ACCETTA OFFERTA</button>
+                <button class="btn" style="background:#e63946; color:white; font-size:14px;" onclick="rejectOffer()">"RIFIUTO L'OFFERTA E VADO AVANTI"</button>
             </div>
         </div>
     </div>
 
-    <!-- REGIONE FORTUNATA MODAL -->
+    <!-- MODAL SCELTA PACCO PER IL CAMBIO -->
+    <div id="swap-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-body">
+            <h2>🔄 CAMBIO PACCO</h2>
+            <p>Con quale dei pacchi rimasti vuoi scambiare il tuo pacco attuale?</p>
+            <div class="swap-grid" id="swap-grid"></div>
+        </div>
+    </div>
+
+    <!-- MODAL REGIONE FORTUNATA -->
     <div id="rf-modal" class="modal-overlay" style="display:none;">
         <div class="modal-body">
-            <h2>🍀 REGIONE FORTUNATA 🍀</h2>
+            <h2>🍀 LA REGIONE FORTUNATA 🍀</h2>
             <p id="rf-desc">Scegli la Regione per 100.000 €!</p>
             <div id="rf-buttons" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; max-height:250px; overflow-y:auto;"></div>
         </div>
@@ -315,14 +335,13 @@
         const VALORI_BLU = ["Pacco Nero", 1, 5, 10, 20, 50, 75, 100, 200, 500];
         const VALORI_ROSSI = [5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000, 200000, 300000];
 
-        // FRASI E TORMENTONI
         const FRASI_STEFANO = [
             "Da questo momento sono affari tuoi!",
             "Ve lo dico fra una manciata di secondi...",
             "Ultimamente c'avete un cuo!",
             "Mi scrive sempre: scusa se faccio così schifo!",
             "Non ce la faremo mai...",
-            "Io me ne vado! (cit. Stefano De Martino)"
+            "Io me ne vado!"
         ];
 
         const FRASI_DOTTORE = [
@@ -334,6 +353,7 @@
         ];
 
         let state = {
+            isAutoAI: true,
             boxes: [],
             playerBoxIndex: null,
             paccoNeroSecretVal: null,
@@ -341,9 +361,8 @@
             rfAttempt: 1,
             openedCount: 0,
             jackpotGennarino: 1000,
-            isDoctor: false,
             roomCode: "",
-            currentOfferData: null
+            currentOffer: null // { type: 'OFFERTA'|'CAMBIO'|'CARTE', amount: number/string }
         };
 
         let peer = null;
@@ -363,11 +382,11 @@
             quote.innerText = `"${text}"`;
         }
 
-        // --- GESTIONE AUDIO MP3 ---
+        // --- AUDIO ---
         function playMusic(id) {
             const player = document.getElementById('audio-player');
             player.src = `musica${id}.mp3`;
-            player.play().catch(e => console.log("Audio file missing"));
+            player.play().catch(e => console.log("Audio non trovato"));
         }
         function stopMusic() { document.getElementById('audio-player').pause(); }
 
@@ -384,8 +403,17 @@
             } catch(e){}
         }
 
-        // --- RUOLI & MULTI-DEVICE ---
+        // --- AVVIO GIOCO ---
+        function startAutoMode() {
+            state.isAutoAI = true;
+            document.getElementById('role-modal').style.display = 'none';
+            document.getElementById('presenter-view').style.display = 'grid';
+            document.getElementById('room-display').innerText = "Modalità: Dottore IA";
+            initNewGame();
+        }
+
         function startAsPresenter() {
+            state.isAutoAI = false;
             document.getElementById('role-modal').style.display = 'none';
             document.getElementById('presenter-view').style.display = 'grid';
 
@@ -405,12 +433,11 @@
         function showJoinDoctor() { document.getElementById('join-sec').style.display = 'block'; }
 
         function startAsDoctor() {
+            state.isAutoAI = false;
             const code = document.getElementById('room-input').value.trim();
             if (!code) return alert("Inserisci il codice!");
 
-            state.isDoctor = true;
             state.roomCode = code;
-
             document.getElementById('role-modal').style.display = 'none';
             document.getElementById('doctor-view').style.display = 'block';
             document.getElementById('doc-room-code').innerText = code;
@@ -432,7 +459,6 @@
             let shuffledRegions = [...REGIONI].sort(() => Math.random() - 0.5);
             let realPrizes = [1, 5, 10, 20, 50, 75, 100, 200, 500, 5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000, 200000, 300000];
             
-            // Sorteggio segreto Pacco Nero
             state.paccoNeroSecretVal = realPrizes[Math.floor(Math.random() * realPrizes.length)];
 
             let allValues = ["Pacco Nero", ...realPrizes].sort(() => Math.random() - 0.5);
@@ -452,7 +478,7 @@
                 });
             }
 
-            setTVQuote("Stefano", FRASI_STEFANO[0]); // "Da questo momento sono affari tuoi!"
+            setTVQuote("Stefano", FRASI_STEFANO[0]);
             renderBoard();
             syncStateToDoctor();
         }
@@ -463,7 +489,7 @@
             }
         }
 
-        // --- RENDER TABELLONE ---
+        // --- TABELLONE ---
         function renderBoard() {
             const blueCol = document.getElementById('blue-list');
             const redCol = document.getElementById('red-list');
@@ -499,7 +525,7 @@
         function openBox(idx) {
             if (state.playerBoxIndex === null) {
                 state.playerBoxIndex = idx;
-                document.getElementById('game-status').innerText = `Pacco Giocatore: ${state.boxes[idx].number} (${state.boxes[idx].region})`;
+                document.getElementById('game-status').innerText = `Il tuo Pacco è il N° ${state.boxes[idx].number} (${state.boxes[idx].region})`;
                 renderBoard();
                 syncStateToDoctor();
                 return;
@@ -512,20 +538,157 @@
 
             let openedVal = state.boxes[idx].value;
 
-            // Controllo Gennarino
             if (openedVal === 5 && state.openedCount <= 3) {
-                alert(`🐶 TROVATO GENNARINO! Il concorrente vince il Jackpot di ${formatMoney(state.jackpotGennarino)}!`);
+                alert(`🐶 TROVATO GENNARINO! Vince il Jackpot di ${formatMoney(state.jackpotGennarino)}!`);
             }
 
-            // Battute automatiche di Stefano De Martino
             if (typeof openedVal === 'number' && openedVal >= 50000) {
-                setTVQuote("Stefano", "Io me ne vado! Abbiamo aperto un pacco rosso pesantissimo!");
+                setTVQuote("Stefano", "Io me me vado! Abbiamo perso un gran bel premio rosso!");
             } else if (openedVal === 0 || openedVal <= 10) {
                 setTVQuote("Stefano", "Ultimamente c'avete un cuo! Pacco blu eliminato!");
             }
 
             renderBoard();
             syncStateToDoctor();
+
+            // CHIAMATA AUTOMATICA DEL DOTTORE (Se modalità IA è attiva)
+            if (state.isAutoAI) {
+                checkAutoDoctorTrigger();
+            }
+        }
+
+        // --- CALCOLO AUTOMATICO DEL DOTTORE (IA) ---
+        function checkAutoDoctorTrigger() {
+            const unopenedCount = state.boxes.filter((b, i) => !b.isOpened && i !== state.playerBoxIndex).length;
+
+            // Intervalli chiamate: dopo 6 pacchi, poi ogni 3 (o a 2 pacchi finali)
+            if ([6, 9, 12, 15, 17, 18].includes(state.openedCount) || unopenedCount === 1) {
+                setTimeout(() => triggerAutoDoctorCall(), 600);
+            }
+        }
+
+        function triggerAutoDoctorCall() {
+            // Calcolo Valore Atteso (EV)
+            let remainingPrizes = state.boxes.filter(b => !b.isOpened).map(b => {
+                return b.value === "Pacco Nero" ? state.paccoNeroSecretVal : b.value;
+            });
+
+            let sum = remainingPrizes.reduce((a, b) => a + b, 0);
+            let ev = sum / remainingPrizes.length;
+
+            // Decidi il tipo di offerta (Denaro, Cambio o Carte)
+            let randType = Math.random();
+            let docQuote = FRASI_DOTTORE[Math.floor(Math.random() * FRASI_DOTTORE.length)];
+
+            let activeReds = state.boxes.filter(b => !b.isOpened && typeof b.value === 'number' && b.value >= 5000).length;
+
+            // Se sono finiti tutti i premi rossi, proponi la Regione Fortunata!
+            if (activeReds === 0) {
+                setTVQuote("Dottore", "I rossi sono finiti. Ti offro di andare alla Regione Fortunata!");
+                if (confirm("I premi rossi sono terminati! Vuoi tentare subito la Regione Fortunata per 100.000 €?")) {
+                    triggerRegioneFortunata();
+                }
+                return;
+            }
+
+            if (randType < 0.25) {
+                // CAMBIO PACCO
+                state.currentOffer = { type: 'CAMBIO', amount: 'CAMBIO PACCO' };
+            } else if (randType < 0.35) {
+                // LE CARTE
+                state.currentOffer = { type: 'CARTE', amount: 'LE CARTE' };
+            } else {
+                // OFFERTA IN DENARO (35% - 50% dell'EV)
+                let offerFactor = 0.3 + (state.openedCount / 20) * 0.25;
+                let offerVal = Math.round((ev * offerFactor) / 1000) * 1000;
+                if (offerVal < 1000) offerVal = 1000;
+                state.currentOffer = { type: 'OFFERTA', amount: offerVal };
+            }
+
+            // Mostra Card TV Overlay
+            playPhoneRing();
+            setTVQuote("Dottore", docQuote);
+            document.getElementById('doctor-quote-box').innerText = `"${docQuote}"`;
+
+            if (state.currentOffer.type === 'CARTE') {
+                document.getElementById('offer-text').innerText = "IL DOTTORE PROPONE: LE CARTE!";
+                document.getElementById('cards-container').style.display = 'block';
+                document.getElementById('standard-offer-btns').style.display = 'none';
+            } else if (state.currentOffer.type === 'CAMBIO') {
+                document.getElementById('offer-text').innerText = "PROPOSTA: CAMBIO PACCO!";
+                document.getElementById('cards-container').style.display = 'none';
+                document.getElementById('standard-offer-btns').style.display = 'block';
+            } else {
+                document.getElementById('offer-text').innerText = "OFFERTA: " + formatMoney(state.currentOffer.amount);
+                document.getElementById('cards-container').style.display = 'none';
+                document.getElementById('standard-offer-btns').style.display = 'block';
+            }
+
+            document.getElementById('doctor-call-modal').style.display = 'flex';
+        }
+
+        function acceptDoctorOffer() {
+            document.getElementById('doctor-call-modal').style.display = 'none';
+
+            if (state.currentOffer.type === 'CAMBIO') {
+                showSwapModal();
+            } else {
+                alert(`🎉 ACCETTATI ${formatMoney(state.currentOffer.amount)}! Nel tuo pacco c'erano: ${formatMoney(state.boxes[state.playerBoxIndex].value)}!`);
+            }
+        }
+
+        // Modalità Scelta del Pacco con cui fare il CAMBIO
+        function showSwapModal() {
+            const grid = document.getElementById('swap-grid');
+            grid.innerHTML = '';
+            
+            state.boxes.forEach((b, idx) => {
+                if (!b.isOpened && idx !== state.playerBoxIndex) {
+                    let btn = document.createElement('button');
+                    btn.className = 'swap-btn';
+                    btn.innerText = `Pacco ${b.number} (${b.region})`;
+                    btn.onclick = () => executeSwap(idx);
+                    grid.appendChild(btn);
+                }
+            });
+
+            document.getElementById('swap-modal').style.display = 'flex';
+        }
+
+        function executeSwap(newBoxIndex) {
+            let oldNum = state.boxes[state.playerBoxIndex].number;
+            let newNum = state.boxes[newBoxIndex].number;
+            
+            state.playerBoxIndex = newBoxIndex;
+            document.getElementById('swap-modal').style.display = 'none';
+            
+            alert(`🔄 Pacco scambiato! Ora hai il Pacco N° ${newNum}!`);
+            document.getElementById('game-status').innerText = `Il tuo nuovo Pacco è il N° ${newNum} (${state.boxes[newBoxIndex].region})`;
+            
+            renderBoard();
+            syncStateToDoctor();
+        }
+
+        function revealCard(cardNumber) {
+            const choices = ["CAMBIO PACCO", "OFFERTA 15.000 €"].sort(() => Math.random() - 0.5);
+            let res = choices[0];
+            alert(`Hai girato la Carta ${cardNumber}: trovata "${res}"!`);
+            
+            document.getElementById('cards-container').style.display = 'none';
+            document.getElementById('standard-offer-btns').style.display = 'block';
+
+            if (res === "CAMBIO PACCO") {
+                state.currentOffer = { type: 'CAMBIO', amount: 'CAMBIO PACCO' };
+                document.getElementById('offer-text').innerText = "ESITO CARTE: CAMBIO PACCO!";
+            } else {
+                state.currentOffer = { type: 'OFFERTA', amount: 15000 };
+                document.getElementById('offer-text').innerText = "ESITO CARTE: OFFERTA 15.000 €";
+            }
+        }
+
+        function rejectOffer() {
+            setTVQuote("Stefano", "Rifiuto l'offerta e vado avanti! Il gioco continua!");
+            document.getElementById('doctor-call-modal').style.display = 'none';
         }
 
         function triggerCliffhanger() {
@@ -541,27 +704,8 @@
             syncStateToDoctor();
         }
 
-        // --- DASHBOARD DOTTORE ---
-        function renderDoctorDashboard() {
-            const tbody = document.getElementById('secret-tbody');
-            tbody.innerHTML = '';
-
-            state.boxes.forEach(b => {
-                if (!b.isOpened) {
-                    let secretValDisp = b.value === "Pacco Nero" ? `Pacco Nero (Nascosto: ${formatMoney(state.paccoNeroSecretVal)})` : formatMoney(b.value);
-                    tbody.innerHTML += `
-                        <tr style="${state.playerBoxIndex === (b.number - 1) ? 'background:#003566;' : ''}">
-                            <td><b>${b.number}</b></td>
-                            <td>${b.region}</td>
-                            <td>${b.playerName}</td>
-                            <td style="color:var(--gold); font-weight:bold;">${secretValDisp}</td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-
-        function sendOfferToPresenter(mode) {
+        // --- MODALITÀ MANUALE DA SMARTPHONE ---
+        function sendManualOffer(mode) {
             if (!conn) return alert("Nessun Presentatore connesso!");
             const val = document.getElementById('offer-input').value;
             const randomDocQuote = FRASI_DOTTORE[Math.floor(Math.random() * FRASI_DOTTORE.length)];
@@ -570,15 +714,15 @@
                 type: 'OFFER',
                 mode: mode,
                 quote: randomDocQuote,
-                amount: mode === 'OFFERTA' ? formatMoney(Number(val)) : mode
+                amount: mode === 'OFFERTA' ? Number(val) : mode
             });
-            alert("Azione/Offerta inviata al Presentatore!");
+            alert("Offerta inviata al Presentatore!");
         }
 
         function handleDataFromDoctor(data) {
             if (data.type === 'OFFER') {
                 playPhoneRing();
-                state.currentOfferData = data;
+                state.currentOffer = { type: data.mode, amount: data.amount };
                 setTVQuote("Dottore", data.quote);
                 
                 document.getElementById('doctor-quote-box').innerText = `"${data.quote}"`;
@@ -588,33 +732,12 @@
                     document.getElementById('cards-container').style.display = 'block';
                     document.getElementById('standard-offer-btns').style.display = 'none';
                 } else {
-                    document.getElementById('offer-text').innerText = data.mode === 'CAMBIO' ? "PROPOSTA: CAMBIO PACCO!" : "OFFERTA: " + data.amount;
+                    document.getElementById('offer-text').innerText = data.mode === 'CAMBIO' ? "PROPOSTA: CAMBIO PACCO!" : "OFFERTA: " + formatMoney(data.amount);
                     document.getElementById('cards-container').style.display = 'none';
                     document.getElementById('standard-offer-btns').style.display = 'block';
                 }
 
                 document.getElementById('doctor-call-modal').style.display = 'flex';
-            }
-        }
-
-        function revealCard(cardNumber) {
-            const choices = ["CAMBIO PACCO", "OFFERTA 15.000 €"].sort(() => Math.random() - 0.5);
-            alert(`Hai scelto la Carta ${cardNumber}: Hai trovato "${choices[0]}"!`);
-            document.getElementById('cards-container').style.display = 'none';
-            document.getElementById('standard-offer-btns').style.display = 'block';
-            document.getElementById('offer-text').innerText = "ESITO CARTE: " + choices[0];
-        }
-
-        function rejectOffer() {
-            setTVQuote("Stefano", "Rifiuto l'offerta e vado avanti! Il gioco continua!");
-            document.getElementById('doctor-call-modal').style.display = 'none';
-        }
-
-        function closeDoctorCall(accepted) {
-            document.getElementById('doctor-call-modal').style.display = 'none';
-            if (accepted) {
-                alert("Offerta Accettata! Partita Conclusa.");
-                triggerRegioneFortunata();
             }
         }
 
@@ -640,12 +763,12 @@
         function chooseRF(region) {
             if (region === state.regioneFortunata) {
                 let win = state.rfAttempt === 1 ? "100.000 €" : "50.000 €";
-                alert(`🎉 COMPLIMENTI! La Regione Fortunata era ${state.regioneFortunata}! Vinci ${win}!`);
+                alert(`🎉 VITTORIA! La Regione Fortunata era proprio ${state.regioneFortunata}! Si vincono ${win}!`);
                 document.getElementById('rf-modal').style.display = 'none';
             } else {
                 if (state.rfAttempt === 1) {
                     state.rfAttempt = 2;
-                    alert(`❌ Errato! ${region} non è la Regione Fortunata. Eliminiamo 10 regioni per tentare i 50.000 €!`);
+                    alert(`❌ Sbagliato! ${region} non è la Regione Fortunata. Eliminiamo 10 regioni per tentare i 50.000 €!`);
                     let wrong = REGIONI.filter(r => r !== state.regioneFortunata && r !== region);
                     let remWrong = wrong.sort(() => Math.random() - 0.5).slice(0, 8);
                     let final10 = [state.regioneFortunata, region, ...remWrong].sort();
