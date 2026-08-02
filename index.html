@@ -196,7 +196,7 @@ h1.brand{
     linear-gradient(0deg, transparent 46%, rgba(120,80,30,.55) 46%, rgba(120,80,30,.55) 54%, transparent 54%),
     linear-gradient(150deg,#4f95c9,#2f6fa8 55%,#1d4f80);
   border:2px solid #163f66; border-radius:8px; padding:10px 4px 6px;
-  min-height:88px; display:flex; flex-direction:column; justify-content:center; align-items:center;
+  min-height:104px; display:flex; flex-direction:column; justify-content:center; align-items:center;
   cursor:pointer; text-align:center; position:relative; overflow:hidden;
   transition:transform .15s ease, box-shadow .15s ease;
   box-shadow:0 4px 10px rgba(0,0,0,.4);
@@ -219,15 +219,14 @@ h1.brand{
 @keyframes flip{from{transform:rotateY(90deg); opacity:0;} to{transform:rotateY(0); opacity:.55;}}
 
 .b-num{
-  font-family:'Bebas Neue',sans-serif; font-size:19px; letter-spacing:1px; color:#2b1d0e;
-  background:linear-gradient(180deg,#e8d9b5,#c9a96e); border-radius:5px; padding:1px 11px;
+  font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:1px; color:#2b1d0e;
+  background:linear-gradient(180deg,#e8d9b5,#c9a96e); border-radius:6px; padding:2px 16px;
   box-shadow:0 2px 4px rgba(0,0,0,.4), inset 0 0 0 1px rgba(120,90,40,.5); margin-top:2px;
+  min-width:38px;
 }
 .box-card.opened .b-num{background:#333; color:var(--gold);}
-.b-region{font-size:10px; margin-top:4px; color:#eaf3ff; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,.4);}
+.b-region{font-size:14px; margin-top:6px; color:#eaf3ff; font-weight:800; text-shadow:0 1px 2px rgba(0,0,0,.4);}
 .box-card.opened .b-region{color:#cfe0ff;}
-.b-player{font-size:9px; color:#cfe0ff; margin-top:1px; font-style:italic; opacity:.85;}
-.box-card.opened .b-player{color:#8fd3ff;}
 .b-value{color:var(--gold-2); background:#0a1533; border-radius:6px; padding:1px 6px; font-weight:800; margin-top:3px; font-size:12.5px;}
 
 /* ---------- doctor view ---------- */
@@ -348,7 +347,6 @@ h1.brand{
       <div id="game-status">Seleziona il tuo pacco iniziale!</div>
       <div class="call-stats" id="round-track"></div>
       <div class="status-actions">
-        <button class="btn small" id="btn-edit-names" onclick="editPlayerNames()">✏️ Nomi</button>
         <button class="btn small danger" onclick="triggerCliffhanger()">🎬 Manciata di secondi...</button>
         <button class="btn small purple" onclick="triggerRegioneFortunata()">🍀 Regione Fortunata</button>
         <button class="btn small ghost" id="btn-call-doctor" style="display:none;" onclick="manualCallDoctor()">☎️ Chiama il Dottore</button>
@@ -623,7 +621,6 @@ function connectToRoom(){
     document.getElementById('doc-room-code').innerText = code;
   } else {
     document.getElementById('room-display').innerText = "Stanza: " + code;
-    document.getElementById('btn-edit-names').style.display = 'none';
   }
 
   peer = new Peer();
@@ -969,7 +966,6 @@ function renderBoard(){
     card.innerHTML = `
       <div class="b-num">${b.number}</div>
       <div class="b-region">${b.region}</div>
-      <div class="b-player">${b.playerName}</div>
       ${b.isOpened ? `<div class="b-value">${formatMoney(b.value)}</div>` : (canOpenOwn ? `<div style="font-size:9px; color:var(--gold);">tocca per scoprire</div>` : '')}
     `;
     card.onclick = () => handleBoxClick(idx);
@@ -1375,18 +1371,6 @@ function renderDoctorDashboard(){
         </tr>`;
     }
   });
-}
-
-/* ============================================================
-   NOMI GIOCATORI
-   ============================================================ */
-function editPlayerNames(){
-  for (let i=0;i<20;i++){
-    let name = prompt(`Nome per il Pacco ${state.boxes[i].number} (${state.boxes[i].region}):`, state.boxes[i].playerName);
-    if (name) state.boxes[i].playerName = name;
-  }
-  renderAll();
-  broadcastState();
 }
 
 function triggerCliffhanger(){ setTVQuote("Stefano", "Ve lo dico fra una manciata di secondi..."); }
