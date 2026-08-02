@@ -37,6 +37,7 @@ body{
   font-family:'Poppins',sans-serif;
   color:var(--text);
   background:
+    radial-gradient(circle, rgba(120,170,255,.12) 1.5px, transparent 1.6px) 0 0/26px 26px,
     radial-gradient(1200px 600px at 50% -10%, #16265e 0%, transparent 60%),
     radial-gradient(900px 500px at 100% 100%, #1b0d3a 0%, transparent 55%),
     linear-gradient(180deg, var(--bg-0), var(--bg-1));
@@ -127,15 +128,16 @@ h1.brand{
 }
 @media (max-width:820px){ .main-layout{grid-template-columns:1fr;} .prize-column{flex-direction:row; flex-wrap:wrap;} }
 
-.prize-column{display:flex; flex-direction:column; gap:4px;}
+.prize-column{display:flex; flex-direction:column; gap:5px;}
 .prize-box{
-  padding:7px 6px; border-radius:8px; font-weight:700; font-size:12.5px;
-  text-align:center; border:1px solid var(--line); transition:all .25s ease;
-  flex:1; min-width:70px;
+  padding:8px 12px; border-radius:999px; font-weight:800; font-size:12.5px;
+  text-align:center; border:1px solid rgba(255,255,255,.15); transition:all .25s ease;
+  flex:1; min-width:70px; box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 2px 6px rgba(0,0,0,.35);
+  letter-spacing:.3px;
 }
-.p-blue{background:var(--blue-prize-bg); color:var(--blue-prize-fg);}
-.p-red{background:var(--red-prize-bg); color:var(--red-prize-fg);}
-.p-off{opacity:.25; text-decoration:line-through; background:var(--off) !important; color:#666 !important; transform:scale(.96);}
+.p-blue{background:linear-gradient(180deg,#1f6fd6,#0a3f8c); color:#fff;}
+.p-red{background:linear-gradient(180deg,#e5383b,#8c0e12); color:#fff;}
+.p-off{opacity:.28; text-decoration:line-through; background:var(--off) !important; color:#666 !important; transform:scale(.94); box-shadow:none;}
 
 .status-box{
   background:linear-gradient(180deg, var(--panel), var(--panel-2));
@@ -154,22 +156,45 @@ h1.brand{
 @media (min-width:600px){ .boxes-grid{grid-template-columns:repeat(5,1fr);} }
 
 .box-card{
-  background:linear-gradient(145deg,#123a6b,#0a2244);
-  border:2px solid var(--gold); border-radius:10px; padding:8px 4px;
-  min-height:82px; display:flex; flex-direction:column; justify-content:center; align-items:center;
+  background:
+    linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.06)) 0 0/100% 3px no-repeat,
+    linear-gradient(90deg, transparent 46%, rgba(120,80,30,.55) 46%, rgba(120,80,30,.55) 54%, transparent 54%),
+    linear-gradient(0deg, transparent 46%, rgba(120,80,30,.55) 46%, rgba(120,80,30,.55) 54%, transparent 54%),
+    linear-gradient(150deg,#e8d9b5,#c9a96e 55%,#b5905a);
+  border:2px solid #8a6a3a; border-radius:8px; padding:10px 4px 6px;
+  min-height:88px; display:flex; flex-direction:column; justify-content:center; align-items:center;
   cursor:pointer; text-align:center; position:relative; overflow:hidden;
   transition:transform .15s ease, box-shadow .15s ease;
+  box-shadow:0 4px 10px rgba(0,0,0,.4);
 }
-.box-card:not(.opened):hover{transform:translateY(-3px); box-shadow:0 6px 18px rgba(255,195,0,.25);}
-.box-card.opened{background:var(--off); border-color:#333; opacity:.55; cursor:default; animation:flip .5s ease;}
+.box-card::before{ /* ceralacca */
+  content:""; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+  width:22px; height:22px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #d94040, #7a0f12 75%);
+  box-shadow:0 2px 4px rgba(0,0,0,.5);
+}
+.box-card:not(.opened):hover{transform:translateY(-3px); box-shadow:0 8px 18px rgba(0,0,0,.5);}
+.box-card.opened{
+  background:var(--off); border-color:#333; opacity:.55; cursor:default; animation:flip .5s ease;
+}
+.box-card.opened::before{display:none;}
 .box-card.player{border:3px solid var(--player); box-shadow:0 0 14px var(--player);}
 .box-card.gennarino-flag::after{content:"🐾"; position:absolute; top:3px; right:5px; font-size:11px; opacity:.65;}
+.box-card.reveal-ready{animation:pulseGold 1.2s ease-in-out infinite;}
+@keyframes pulseGold{0%,100%{box-shadow:0 0 0 rgba(255,195,0,.0);} 50%{box-shadow:0 0 16px rgba(255,195,0,.7);}}
 @keyframes flip{from{transform:rotateY(90deg); opacity:0;} to{transform:rotateY(0); opacity:.55;}}
 
-.b-num{font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--gold); letter-spacing:1px;}
-.b-region{font-size:10.5px; margin-top:1px; color:#cfe0ff;}
-.b-player{font-size:9.5px; color:#8fd3ff; margin-top:2px; font-style:italic; opacity:.85;}
-.b-value{color:var(--gold-2); font-weight:800; margin-top:3px; font-size:13px;}
+.b-num{
+  font-family:'Bebas Neue',sans-serif; font-size:19px; letter-spacing:1px; color:#fff;
+  background:linear-gradient(180deg,#1f6fd6,#0a3f8c); border-radius:6px; padding:1px 10px;
+  box-shadow:0 2px 4px rgba(0,0,0,.4); margin-top:2px;
+}
+.box-card.opened .b-num{background:#333;}
+.b-region{font-size:10px; margin-top:4px; color:#3a2a12; font-weight:700;}
+.box-card.opened .b-region{color:#cfe0ff;}
+.b-player{font-size:9px; color:#5c431f; margin-top:1px; font-style:italic; opacity:.85;}
+.box-card.opened .b-player{color:#8fd3ff;}
+.b-value{color:var(--gold-2); background:#0a1533; border-radius:6px; padding:1px 6px; font-weight:800; margin-top:3px; font-size:12.5px;}
 
 /* ---------- doctor view ---------- */
 .doctor-view{display:none; width:100%; max-width:760px;}
@@ -342,6 +367,8 @@ h1.brand{
     <div id="standard-offer-btns">
       <button class="btn teal" style="font-size:15px; padding:11px 20px;" onclick="acceptDoctorOffer()">✅ ACCETTO</button>
       <button class="btn danger" style="font-size:13px;" onclick="rejectOffer()">❌ RIFIUTO E VADO AVANTI</button>
+      <br>
+      <button class="btn ghost small" id="btn-counter" style="margin-top:8px; display:none;" onclick="sendCounterOffer()">🤝 Contrattacca con una cifra</button>
     </div>
   </div>
 </div>
@@ -389,8 +416,15 @@ const REGIONI = [
 const VALORI_BLU  = ["Pacco Nero",1,5,10,20,50,75,100,200,500];
 const VALORI_ROSSI = [5000,10000,15000,20000,30000,50000,75000,100000,200000,300000];
 
-/* round schedule: quante buste si aprono fra una chiamata e l'altra */
-const ROUND_SCHEDULE = [3,3,3,2,2,1,1,1,1,1,1];
+/* ritmo delle chiamate: quante buste si aprono fra una chiamata e l'altra.
+   - prima chiamata dopo i primi 6 pacchi
+   - poi ogni 3 pacchi
+   - quando restano pochi pacchi (<=5 esclusi il proprio) le chiamate diventano più frequenti (ogni 1) */
+function computeRoundTarget(callsMade, remainingCount){
+  if (callsMade === 0) return 6;
+  if (remainingCount <= 5) return 1;
+  return 3;
+}
 
 const FRASI_STEFANO = [
   "Da questo momento in poi... sono affari tuoi!",
@@ -413,7 +447,7 @@ const FRASI_DOTTORE = [
    ============================================================ */
 let state = {
   role: 'AUTO',
-  phase: 'ROLE',            // ROLE -> SETUP -> PLAYING -> FINAL
+  phase: 'ROLE',            // ROLE -> SETUP -> PLAYING -> REVEAL -> FINAL
   boxes: [],
   playerBoxIndex: null,
   gennarinoBoxIndex: null,  // pacco con il Colpo di Gennarino
@@ -422,7 +456,12 @@ let state = {
   rfAttempt: 1,
   openedCount: 0,
   openedThisRound: 0,
-  roundIndex: 0,
+  callsMade: 0,
+  roundTarget: 6,
+  cambioProposed: false,    // il regolamento impone almeno una proposta di Cambio a partita
+  dealSecured: false,       // vero se il concorrente ha accettato un'offerta in denaro
+  securedAmount: 0,
+  pendingCounter: null,     // { amount } contro-proposta in attesa di risposta del Dottore
   roomCode: "",
   currentOffer: null,
   playerName: "Concorrente"
@@ -590,7 +629,12 @@ function initNewGame(){
   state.gennarinoFound = false;
   state.openedCount = 0;
   state.openedThisRound = 0;
-  state.roundIndex = 0;
+  state.callsMade = 0;
+  state.roundTarget = 6;
+  state.cambioProposed = false;
+  state.dealSecured = false;
+  state.securedAmount = 0;
+  state.pendingCounter = null;
   state.rfAttempt = 1;
   state.currentOffer = null;
 
@@ -601,7 +645,7 @@ function initNewGame(){
       region: shuffledRegions[i],
       playerName: `Giocatore ${i+1}`,
       value: v === "Pacco Nero" ? paccoNeroSecretVal : v,
-      displayAsBlack: v === "Pacco Nero", // il tabellone mostra "Pacco Nero" finché è chiuso concettualmente non serve, il valore reale è comunque nascosto finché non si apre
+      isBlackBox: v === "Pacco Nero", // il valore reale del Pacco Nero è ignoto a chiunque (Dottore incluso) finché non viene aperto
       isOpened: false
     });
   }
@@ -618,45 +662,37 @@ function broadcast(msg){
   if (state.role !== 'PRESENTER') return;
   connections.forEach(c => { if (c.open) c.send(msg); });
 }
-function sendFullSync(c){
-  const msg = {
+function syncPayload(){
+  return {
     type: state.phase === 'SETUP' ? 'SETUP_SYNC' : 'SYNC',
     phase: state.phase,
     boxes: state.boxes,
     playerBoxIndex: state.playerBoxIndex,
     openedCount: state.openedCount,
     openedThisRound: state.openedThisRound,
-    roundIndex: state.roundIndex,
+    callsMade: state.callsMade,
+    roundTarget: state.roundTarget,
+    cambioProposed: state.cambioProposed,
+    dealSecured: state.dealSecured,
+    securedAmount: state.securedAmount,
     gennarinoBoxIndex: state.gennarinoBoxIndex,
     gennarinoFound: state.gennarinoFound,
     playerName: state.playerName
   };
-  c.send(msg);
 }
-function broadcastState(){
-  const msg = {
-    type: state.phase === 'SETUP' ? 'SETUP_SYNC' : 'SYNC',
-    phase: state.phase,
-    boxes: state.boxes,
-    playerBoxIndex: state.playerBoxIndex,
-    openedCount: state.openedCount,
-    openedThisRound: state.openedThisRound,
-    roundIndex: state.roundIndex,
-    gennarinoBoxIndex: state.gennarinoBoxIndex,
-    gennarinoFound: state.gennarinoFound,
-    playerName: state.playerName
-  };
-  broadcast(msg);
-}
+function sendFullSync(c){ c.send(syncPayload()); }
+function broadcastState(){ broadcast(syncPayload()); }
 
 function handleDataAtHost(data, fromConn){
   switch(data.type){
     case 'OFFER':
+      if (data.mode === 'CAMBIO' || data.mode === 'CARTE') state.cambioProposed = true;
       playPhoneRing();
-      state.currentOffer = { type: data.mode, amount: data.amount };
+      state.currentOffer = { type: data.mode, amount: data.amount, hiddenAmount: data.hiddenAmount, carteMap: data.carteMap };
       setTVQuote("Dottore", data.quote);
       showCallModalOnDevice(data.mode, data.amount, data.quote);
       broadcast(data);
+      broadcastState();
       break;
     case 'CLICK_BOX':
       openBox(data.index);
@@ -665,6 +701,7 @@ function handleDataAtHost(data, fromConn){
       if (data.action === 'ACCEPT') acceptDoctorOffer(true);
       if (data.action === 'REJECT') rejectOffer(true);
       if (data.action === 'SWAP') executeSwap(data.newBoxIndex);
+      if (data.action === 'COUNTER') relayCounterToDoctor(data.amount);
       break;
     case 'PLAYER_NAME':
       state.playerName = data.name;
@@ -681,7 +718,16 @@ function handleDataAtHost(data, fromConn){
     case 'RF_CHOICE':
       resolveRF(data.region, fromConn);
       break;
+    case 'COUNTER_DECISION':
+      applyCounterDecision(data.accepted, data.amount, data.newOffer);
+      break;
   }
+}
+
+/* relay a counter-offer coming from the presenter/player device to whichever
+   connected client is playing the Doctor role (host doesn't know the amount's fate) */
+function relayCounterToDoctor(amount){
+  broadcast({type:'COUNTER_OFFER', amount});
 }
 
 function handleDataFromHost(data){
@@ -691,7 +737,11 @@ function handleDataFromHost(data){
     state.playerBoxIndex = data.playerBoxIndex;
     state.openedCount = data.openedCount;
     state.openedThisRound = data.openedThisRound;
-    state.roundIndex = data.roundIndex;
+    state.callsMade = data.callsMade;
+    state.roundTarget = data.roundTarget;
+    state.cambioProposed = data.cambioProposed;
+    state.dealSecured = data.dealSecured;
+    state.securedAmount = data.securedAmount;
     state.gennarinoBoxIndex = data.gennarinoBoxIndex;
     state.gennarinoFound = data.gennarinoFound;
     state.playerName = data.playerName;
@@ -727,11 +777,40 @@ function handleDataFromHost(data){
     }
   } else if (data.type === 'OFFER' && state.role === 'PLAYER'){
     playPhoneRing();
-    state.currentOffer = { type: data.mode, amount: data.amount };
+    state.currentOffer = { type: data.mode, amount: data.amount, hiddenAmount: data.hiddenAmount, carteMap: data.carteMap };
     setTVQuote("Dottore", data.quote);
     showCallModalOnDevice(data.mode, data.amount, data.quote);
+  } else if (data.type === 'COUNTER_OFFER' && state.role === 'DOCTOR'){
+    const ok = confirm(`Il concorrente rilancia chiedendo ${formatMoney(data.amount)}.\nOK = accetta la richiesta, Annulla = rifiuta.`);
+    if (ok){
+      connToHost.send({type:'COUNTER_DECISION', accepted:true, amount:data.amount});
+    } else {
+      const alt = prompt("Vuoi fare una nuova offerta al posto del rifiuto secco? Lascia vuoto per rifiutare e basta.", "");
+      const newOffer = alt && !isNaN(alt) && Number(alt) > 0 ? Number(alt) : null;
+      connToHost.send({type:'COUNTER_DECISION', accepted:false, amount:data.amount, newOffer});
+    }
   } else if (data.type === 'RF_RESULT'){
     showRFResultModal(data);
+  } else if (data.type === 'COUNTER_RESPONSE'){
+    document.getElementById('doctor-call-modal').style.display = 'none';
+    if (data.accepted){
+      alert(`✅ Il Dottore accetta la tua contro-offerta di ${formatMoney(data.amount)}!`);
+    } else {
+      alert(`❌ Il Dottore rifiuta la contro-offerta.`);
+      if (data.newOffer){
+        playPhoneRing();
+        state.currentOffer = { type:'OFFERTA', amount: data.newOffer };
+        setTVQuote("Dottore", "Non se ne parla nemmeno. Ecco la mia offerta definitiva.");
+        showCallModalOnDevice('OFFERTA', data.newOffer, "Non se ne parla nemmeno. Ecco la mia offerta definitiva.");
+      }
+    }
+  } else if (data.type === 'FINAL_RESULT'){
+    document.getElementById('final-title').innerText =
+      data.reason === 'OFFERTA_ACCETTATA' ? '💰 OFFERTA ACCETTATA' : '🏆 FINE PARTITA';
+    document.getElementById('final-value').innerText = formatMoney(data.amount);
+    document.getElementById('final-desc').innerText = data.customMessage ||
+      (data.reason === 'OFFERTA_ACCETTATA' ? 'Complimenti, hai portato a casa questa cifra!' : `Il pacco finale conteneva questo premio.`);
+    document.getElementById('final-modal').style.display = 'flex';
   }
 }
 
@@ -749,7 +828,10 @@ function renderSetupTableForDoctor(){
   sorted.forEach(b=>{
     const idx = state.boxes.indexOf(b);
     const gennarinoTag = idx === state.gennarinoBoxIndex ? ' 🐾' : '';
-    rows += `<tr><td><b>${b.number}</b></td><td>${b.region}</td><td style="color:var(--gold); font-weight:800;">${formatMoney(b.value)}${gennarinoTag}</td></tr>`;
+    const valDisplay = b.isBlackBox
+      ? `<span title="Il contenuto del Pacco Nero è ignoto a chiunque, Dottore incluso, fino alla sua apertura: usa una busta pre-sigillata a parte.">🔒 Pacco Nero — contenuto sigillato</span>`
+      : `${formatMoney(b.value)}${gennarinoTag}`;
+    rows += `<tr><td><b>${b.number}</b></td><td>${b.region}</td><td style="color:var(--gold); font-weight:800;">${valDisplay}</td></tr>`;
   });
   rows += `</tbody>`;
   table.innerHTML = rows;
@@ -769,29 +851,26 @@ function doctorConfirmReady(){
 function renderAll(){
   renderBoard();
   renderRoundTrack();
-  if (state.role === 'PRESENTER' || state.role === 'AUTO'){
-    document.getElementById('btn-call-doctor').style.display =
-      (state.role === 'PRESENTER' && state.openedThisRound >= currentRoundTarget() && !allDone()) ? 'inline-block' : 'none';
-  }
+  const showCallBtn = (state.role === 'PRESENTER' && state.phase === 'PLAYING' &&
+                        !state.dealSecured && state.openedThisRound >= state.roundTarget && !remainingIsOne());
+  document.getElementById('btn-call-doctor').style.display = showCallBtn ? 'inline-block' : 'none';
 }
 
-function currentRoundTarget(){
-  return ROUND_SCHEDULE[Math.min(state.roundIndex, ROUND_SCHEDULE.length-1)];
+/* pacchi ancora chiusi sul tabellone, escluso quello del concorrente */
+function remainingBoardCount(){
+  return state.boxes.filter((b,i)=> !b.isOpened && i !== state.playerBoxIndex).length;
 }
-function allDone(){
-  const remaining = state.boxes.filter((b,i)=> !b.isOpened && i !== state.playerBoxIndex).length;
-  return remaining <= 1;
-}
+function remainingIsOne(){ return remainingBoardCount() <= 1; }
 
 function renderRoundTrack(){
   const track = document.getElementById('round-track');
-  track.innerHTML = '';
-  ROUND_SCHEDULE.forEach((n, i) => {
-    const dot = document.createElement('div');
-    dot.className = 'round-dot' + (i < state.roundIndex ? ' done' : (i === state.roundIndex ? ' active' : ''));
-    dot.title = `Round ${i+1}: ${n} pacchi`;
-    track.appendChild(dot);
-  });
+  if (state.dealSecured){
+    track.innerHTML = `<span style="color:var(--gold); font-weight:700; font-size:12px;">🔓 Offerta assicurata: ora si scoprono i pacchi rimasti per curiosità</span>`;
+    return;
+  }
+  const remaining = remainingBoardCount();
+  const toGo = Math.max(0, state.roundTarget - state.openedThisRound);
+  track.innerHTML = `<span style="font-size:12px; color:var(--text-dim);">Chiamata N. ${state.callsMade+1} tra ${toGo} pacco/i · pacchi rimasti sul tabellone: ${remaining}</span>`;
 }
 
 function renderBoard(){
@@ -800,35 +879,26 @@ function renderBoard(){
   blueCol.innerHTML = ''; redCol.innerHTML = '';
 
   VALORI_BLU.forEach(v => {
-    const target = v === "Pacco Nero" ? 0 : v;
-    const isOpened = !state.boxes.some(b => !b.isOpened && (v === "Pacco Nero" ? false : b.value === target) );
-    // "Pacco Nero" rappresenta il valore 0: consideriamo spento se tutti i pacchi da 0€ risultano aperti (ce n'è uno solo, generato come parte dei realPrizes non include 0, quindi trattalo come sempre "in gioco" finché non si apre lo specifico pacco nero)
-    blueCol.innerHTML += `<div class="prize-box p-blue">${formatMoney(v)}</div>`;
+    const isOff = state.boxes.some(b => b.isOpened && (v === "Pacco Nero" ? b.isBlackBox : (!b.isBlackBox && b.value === v)));
+    blueCol.innerHTML += `<div class="prize-box p-blue ${isOff?'p-off':''}">${formatMoney(v)}</div>`;
   });
-  // Ricalcolo corretto: spegniamo i valori man mano che uscogno dai pacchi aperti
-  const openedValues = state.boxes.filter(b=>b.isOpened).map(b=>b.value);
-  [...blueCol.children].forEach((el, i) => {
-    const v = VALORI_BLU[i];
-    if (v === "Pacco Nero") return; // gestito sotto
-    if (openedValues.includes(v)) el.classList.add('p-off');
-  });
-  [...redCol.children].forEach(()=>{});
 
   VALORI_ROSSI.forEach(v => {
-    const isOpened = openedValues.includes(v);
-    redCol.innerHTML += `<div class="prize-box p-red ${isOpened?'p-off':''}">${formatMoney(v)}</div>`;
+    const isOff = state.boxes.some(b => b.isOpened && !b.isBlackBox && b.value === v);
+    redCol.innerHTML += `<div class="prize-box p-red ${isOff?'p-off':''}">${formatMoney(v)}</div>`;
   });
 
   const grid = document.getElementById('boxes-grid');
   grid.innerHTML = '';
   state.boxes.forEach((b, idx) => {
     const card = document.createElement('div');
-    card.className = `box-card ${b.isOpened?'opened':''} ${state.playerBoxIndex===idx?'player':''}`;
+    const canOpenOwn = state.dealSecured && idx === state.playerBoxIndex && !b.isOpened;
+    card.className = `box-card ${b.isOpened?'opened':''} ${state.playerBoxIndex===idx?'player':''} ${canOpenOwn?'reveal-ready':''}`;
     card.innerHTML = `
       <div class="b-num">${b.number}</div>
       <div class="b-region">${b.region}</div>
       <div class="b-player">${b.playerName}</div>
-      ${b.isOpened ? `<div class="b-value">${formatMoney(b.value)}</div>` : ''}
+      ${b.isOpened ? `<div class="b-value">${formatMoney(b.value)}</div>` : (canOpenOwn ? `<div style="font-size:9px; color:var(--gold);">tocca per scoprire</div>` : '')}
     `;
     card.onclick = () => handleBoxClick(idx);
     grid.appendChild(card);
@@ -859,11 +929,12 @@ function openBox(idx){
     broadcastState();
     return;
   }
-  if (idx === state.playerBoxIndex) return;
+
+  // il pacco del concorrente si apre solo in modalità "rivelazione" dopo un'offerta accettata
+  if (idx === state.playerBoxIndex && !state.dealSecured) return;
 
   state.boxes[idx].isOpened = true;
   state.openedCount++;
-  state.openedThisRound++;
 
   let openedVal = state.boxes[idx].value;
   playChime(openedVal < 5000);
@@ -873,24 +944,38 @@ function openBox(idx){
     setTimeout(()=>alert(`🐾 COLPO DI GENNARINO! Bonus speciale conquistato, complimenti!`), 200);
   }
 
+  document.getElementById('game-status').innerText =
+    `Pacco Concorrente: N° ${state.boxes[state.playerBoxIndex].number} (${state.boxes[state.playerBoxIndex].region})`;
+
+  /* ---- modalità rivelazione: si apre solo per curiosità, il premio è già assicurato ---- */
+  if (state.dealSecured){
+    renderAll();
+    broadcastState();
+    const allBoxesOpen = state.boxes.every(b => b.isOpened);
+    if (allBoxesOpen || idx === state.playerBoxIndex){
+      setTimeout(()=>showRevealSummary(), 400);
+    }
+    return;
+  }
+
+  /* ---- gioco normale ---- */
+  state.openedThisRound++;
+
   if (typeof openedVal === 'number' && openedVal >= 50000){
     setTVQuote("Stefano", "Che peccato... è saltato un premio importante dal tabellone!");
   } else if (typeof openedVal === 'number' && openedVal <= 10){
     setTVQuote("Stefano", "Via un pacco basso, il tabellone si ripulisce!");
   }
 
-  document.getElementById('game-status').innerText =
-    `Pacco Concorrente: N° ${state.boxes[state.playerBoxIndex].number} (${state.boxes[state.playerBoxIndex].region})`;
-
   renderAll();
   broadcastState();
 
-  if (allDone()){
+  if (remainingIsOne()){
     setTimeout(()=>triggerFinalChoice(), 500);
     return;
   }
 
-  if (state.openedThisRound >= currentRoundTarget()){
+  if (state.openedThisRound >= state.roundTarget){
     if (state.role === 'AUTO'){
       setTimeout(()=>triggerAutoDoctorCall(), 700);
     }
@@ -899,8 +984,9 @@ function openBox(idx){
 }
 
 function manualCallDoctor(){
-  state.roundIndex++;
+  state.callsMade++;
   state.openedThisRound = 0;
+  state.roundTarget = computeRoundTarget(state.callsMade, remainingBoardCount());
   setTVQuote("Stefano", "Squilla il telefono... è il Dottore!");
   document.getElementById('btn-call-doctor').style.display = 'none';
   renderRoundTrack();
@@ -913,31 +999,95 @@ function manualCallDoctor(){
    ============================================================ */
 function showCallModalOnDevice(mode, amount, quote){
   document.getElementById('doctor-quote-box').innerText = `"${quote}"`;
+  const counterBtn = document.getElementById('btn-counter');
   if (mode === 'CARTE'){
     document.getElementById('offer-text').innerText = "IL DOTTORE PROPONE: LE CARTE!";
     document.getElementById('cards-container').style.display = 'block';
     document.getElementById('standard-offer-btns').style.display = 'none';
+    counterBtn.style.display = 'none';
   } else if (mode === 'CAMBIO'){
     document.getElementById('offer-text').innerText = "PROPOSTA: CAMBIO PACCO!";
     document.getElementById('cards-container').style.display = 'none';
     document.getElementById('standard-offer-btns').style.display = 'block';
+    counterBtn.style.display = 'none';
   } else {
     document.getElementById('offer-text').innerText = "OFFERTA: " + formatMoney(amount);
     document.getElementById('cards-container').style.display = 'none';
     document.getElementById('standard-offer-btns').style.display = 'block';
+    counterBtn.style.display = (state.role !== 'DOCTOR') ? 'inline-block' : 'none';
   }
   document.getElementById('doctor-call-modal').style.display = 'flex';
+}
+
+function sendCounterOffer(){
+  const amt = prompt("Che cifra vuoi chiedere al Dottore per chiudere subito?");
+  if (!amt || isNaN(amt) || Number(amt) <= 0) return;
+  const amount = Number(amt);
+
+  if (state.role === 'PLAYER' && connToHost){
+    connToHost.send({type:'PLAYER_ACTION', action:'COUNTER', amount});
+    document.getElementById('doctor-call-modal').style.display = 'none';
+  } else if (state.role === 'PRESENTER'){
+    relayCounterToDoctor(amount);
+    document.getElementById('doctor-call-modal').style.display = 'none';
+  } else if (state.role === 'AUTO'){
+    document.getElementById('doctor-call-modal').style.display = 'none';
+    resolveCounterLocally(amount);
+  }
+}
+
+/* IA del Dottore decide su una contro-offerta in modalità singolo giocatore */
+function resolveCounterLocally(amount){
+  const base = state.currentOffer ? state.currentOffer.amount : 0;
+  const accept = amount <= base * 1.20;
+  if (accept){
+    setTVQuote("Dottore", "Va bene, accetto la vostra richiesta. Affare fatto!");
+    enterRevealMode(amount);
+  } else {
+    const counterBack = Math.round((base * 1.08) / 500) * 500;
+    setTVQuote("Dottore", "Non se ne parla nemmeno a quella cifra. Ecco la mia offerta definitiva.");
+    alert(`❌ Il Dottore rifiuta ${formatMoney(amount)}.`);
+    state.currentOffer = { type:'OFFERTA', amount: counterBack };
+    playPhoneRing();
+    showCallModalOnDevice('OFFERTA', counterBack, "Ecco la mia offerta definitiva.");
+  }
+}
+
+/* applica la decisione del Dottore (umano) a una contro-offerta, lato Presentatore/host */
+function applyCounterDecision(accepted, amount, newOffer){
+  if (accepted){
+    broadcast({type:'COUNTER_RESPONSE', accepted:true, amount});
+    enterRevealMode(amount);
+  } else {
+    broadcast({type:'COUNTER_RESPONSE', accepted:false, newOffer});
+    if (newOffer){
+      state.currentOffer = { type:'OFFERTA', amount:newOffer };
+    }
+  }
 }
 
 function sendManualOffer(mode){
   if (!connToHost) return alert("Non connesso al Presentatore!");
   const val = document.getElementById('offer-input').value;
-  if (mode === 'OFFERTA' && (!val || isNaN(val) || Number(val) <= 0)) return alert("Inserisci una cifra valida.");
+  if ((mode === 'OFFERTA' || mode === 'CARTE') && (!val || isNaN(val) || Number(val) <= 0)){
+    return alert(mode === 'CARTE'
+      ? "Per Le Carte inserisci comunque la cifra nascosta dietro la carta 'Offerta'."
+      : "Inserisci una cifra valida.");
+  }
   const randomDocQuote = FRASI_DOTTORE[Math.floor(Math.random()*FRASI_DOTTORE.length)];
-  connToHost.send({
-    type:'OFFER', mode, quote: randomDocQuote,
-    amount: mode === 'OFFERTA' ? Number(val) : mode
-  });
+  const payload = { type:'OFFER', mode, quote: randomDocQuote };
+
+  if (mode === 'OFFERTA'){
+    payload.amount = Number(val);
+  } else if (mode === 'CARTE'){
+    payload.amount = 'LE CARTE';
+    payload.hiddenAmount = Number(val);
+    payload.carteMap = Math.random() < 0.5 ? {1:'CAMBIO',2:'OFFERTA'} : {1:'OFFERTA',2:'CAMBIO'};
+  } else {
+    payload.amount = mode;
+  }
+
+  connToHost.send(payload);
   document.getElementById('offer-input').value = '';
 }
 
@@ -949,9 +1099,9 @@ function acceptDoctorOffer(fromRemote){
   if (state.currentOffer && state.currentOffer.type === 'CAMBIO'){
     showSwapModal();
   } else if (state.currentOffer && state.currentOffer.type === 'CARTE'){
-    // gestito da revealCard
+    // gestito da revealCard, l'accettazione non si applica a questa modalità
   } else if (state.currentOffer){
-    endGame('OFFERTA_ACCETTATA', state.currentOffer.amount);
+    enterRevealMode(state.currentOffer.amount);
   }
 }
 
@@ -970,12 +1120,50 @@ function manualCallDoctorReset(){
   document.getElementById('btn-call-doctor').style.display = 'none';
 }
 
+/* Le Carte: una nasconde il Cambio, l'altra un'offerta in denaro */
 function revealCard(n){
   document.getElementById('doctor-call-modal').style.display = 'none';
-  const won = Math.random() < 0.5;
-  alert(won ? "🎉 Hai pescato la carta fortunata! Ricevi un piccolo bonus in denaro." : "😕 Carta senza premio, il gioco continua.");
+  const map = (state.currentOffer && state.currentOffer.carteMap) || {1:'CAMBIO', 2:'OFFERTA'};
+  const outcome = map[n];
+  if (outcome === 'CAMBIO'){
+    setTVQuote("Stefano", "Carta del Cambio! Potete scambiare il vostro pacco.");
+    showSwapModal();
+  } else {
+    const amount = (state.currentOffer && state.currentOffer.hiddenAmount) || 0;
+    setTVQuote("Stefano", "Carta dell'Offerta! Il Dottore vi assicura una cifra.");
+    enterRevealMode(amount);
+  }
+}
+
+/* ============================================================
+   MODALITÀ RIVELAZIONE (dopo un'offerta accettata)
+   ============================================================ */
+function enterRevealMode(amount){
+  state.dealSecured = true;
+  state.securedAmount = amount;
   state.currentOffer = null;
-  if (state.role === 'PRESENTER' || state.role === 'AUTO') manualCallDoctorReset();
+  document.getElementById('btn-call-doctor').style.display = 'none';
+  setTVQuote("Stefano", `Affare fatto: ${formatMoney(amount)} assicurati! Ma restiamo qui a scoprire insieme cosa nascondevano i pacchi rimasti...`);
+  renderAll();
+  broadcastState();
+}
+
+function showRevealSummary(){
+  const ownVal = state.boxes[state.playerBoxIndex].value;
+  const diff = ownVal - state.securedAmount;
+  let msg;
+  if (state.boxes[state.playerBoxIndex].isOpened){
+    if (diff > 0){
+      msg = `Il tuo pacco conteneva ${formatMoney(ownVal)}: ${formatMoney(diff)} in più rispetto a quanto assicurato. Peccato, ma la cifra di ${formatMoney(state.securedAmount)} è comunque tua!`;
+    } else if (diff < 0){
+      msg = `Il tuo pacco conteneva solo ${formatMoney(ownVal)}: hai fatto benissimo ad accettare ${formatMoney(state.securedAmount)}!`;
+    } else {
+      msg = `Il tuo pacco conteneva esattamente la cifra assicurata: ${formatMoney(state.securedAmount)}!`;
+    }
+  } else {
+    msg = `Hai portato a casa ${formatMoney(state.securedAmount)}. Puoi ancora toccare il tuo pacco per scoprire cosa conteneva, per pura curiosità.`;
+  }
+  endGame('OFFERTA_ACCETTATA', state.securedAmount, msg);
 }
 
 function showSwapModal(){
@@ -1014,14 +1202,23 @@ function executeSwap(newBoxIndex){
 /* ============================================================
    IA DOTTORE (modalità Auto)
    ============================================================ */
+function computeOfferAmount(remainingPrizes, redRatio){
+  const sum = remainingPrizes.reduce((a,b)=>a+b,0);
+  const ev = sum / remainingPrizes.length;
+  // il Dottore offre di norma tra il 30% e il 50% del valore atteso: più rossi restano, più è generoso
+  const factor = 0.30 + redRatio*0.20;
+  let offerVal = Math.round((ev*factor)/500)*500;
+  if (offerVal < 500) offerVal = 500;
+  return offerVal;
+}
+
 function triggerAutoDoctorCall(){
+  state.callsMade++;
+
   let remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
   let remainingPrizes = remainingIdx.map(i => state.boxes[i].value);
-  let sum = remainingPrizes.reduce((a,b)=>a+b,0);
-  let ev = sum / remainingPrizes.length;
-
   let activeReds = remainingPrizes.filter(v => v >= 5000).length;
-  let randType = Math.random();
+  let redRatio = activeReds / remainingPrizes.length;
   let docQuote = FRASI_DOTTORE[Math.floor(Math.random()*FRASI_DOTTORE.length)];
 
   if (activeReds === 0 && Math.random() < 0.5){
@@ -1030,14 +1227,25 @@ function triggerAutoDoctorCall(){
     return;
   }
 
-  if (randType < 0.20){
+  // il regolamento impone almeno un Cambio a partita: se siamo vicini alla fine e non è mai
+  // stato proposto, il Dottore lo forza ora
+  const mustForceCambio = !state.cambioProposed && remainingIdx.length <= 6;
+  const cambioChance = 0.20 + (redRatio < 0.3 ? 0.15 : 0); // tabellone "blu" -> più cambi
+  let randType = Math.random();
+
+  if (mustForceCambio || randType < cambioChance){
+    state.cambioProposed = true;
     state.currentOffer = { type:'CAMBIO', amount:'CAMBIO PACCO' };
-  } else if (randType < 0.32){
-    state.currentOffer = { type:'CARTE', amount:'LE CARTE' };
+  } else if (randType < cambioChance + 0.12){
+    const hiddenAmount = computeOfferAmount(remainingPrizes, redRatio);
+    const cardsFlip = Math.random() < 0.5;
+    state.cambioProposed = true; // una delle due carte è comunque un Cambio
+    state.currentOffer = {
+      type:'CARTE', amount:'LE CARTE', hiddenAmount,
+      carteMap: cardsFlip ? {1:'CAMBIO',2:'OFFERTA'} : {1:'OFFERTA',2:'CAMBIO'}
+    };
   } else {
-    let offerFactor = 0.30 + (state.openedCount/20)*0.30;
-    let offerVal = Math.round((ev*offerFactor)/500)*500;
-    if (offerVal < 500) offerVal = 500;
+    const offerVal = computeOfferAmount(remainingPrizes, redRatio);
     state.currentOffer = { type:'OFFERTA', amount: offerVal };
   }
 
@@ -1059,12 +1267,15 @@ function renderDoctorDashboard(){
     if (!b.isOpened){
       const isMine = idx === state.playerBoxIndex;
       const gTag = idx === state.gennarinoBoxIndex ? ' 🐾' : '';
+      const valDisplay = b.isBlackBox
+        ? `🔒 sigillato`
+        : `${formatMoney(b.value)}${gTag}`;
       tbody.innerHTML += `
-        <tr class="${isMine?'mine':''}">
+        <tr class="${isMine?'mine':''} ${b.isBlackBox?'gennarino':''}">
           <td><b>${b.number}</b></td>
           <td>${b.region}</td>
           <td>${b.playerName}</td>
-          <td style="color:var(--gold); font-weight:800;">${formatMoney(b.value)}${gTag}</td>
+          <td style="color:var(--gold); font-weight:800;">${valDisplay}</td>
         </tr>`;
     }
   });
@@ -1150,6 +1361,7 @@ function showRFResultModal(data){
    FINALE
    ============================================================ */
 function triggerFinalChoice(){
+  if (state.dealSecured) return; // l'offerta è già stata accettata, si è in modalità rivelazione
   const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
   if (remainingIdx.length !== 1) return;
   setTVQuote("Stefano", "È rimasto un solo pacco oltre al tuo. Ultima decisione della serata!");
@@ -1157,19 +1369,25 @@ function triggerFinalChoice(){
     const other = remainingIdx[0];
     const keep = confirm(`Rimane solo il Pacco ${state.boxes[other].number}.\nPremi OK per TENERE il tuo pacco, Annulla per CAMBIARLO con l'altro.`);
     if (!keep) executeSwap(other);
+    // rivela entrambi i pacchi rimasti sul tabellone per il gran finale
+    state.boxes[other].isOpened = true;
+    state.boxes[state.playerBoxIndex].isOpened = true;
+    renderAll();
+    broadcastState();
     endGame('FINALE', state.boxes[state.playerBoxIndex].value);
   }
 }
 
-function endGame(reason, amount){
+function endGame(reason, amount, customMessage){
   state.phase = 'FINAL';
   document.getElementById('final-title').innerText =
     reason === 'OFFERTA_ACCETTATA' ? '💰 OFFERTA ACCETTATA' : '🏆 FINE PARTITA';
   document.getElementById('final-value').innerText = formatMoney(amount);
-  document.getElementById('final-desc').innerText =
-    reason === 'OFFERTA_ACCETTATA' ? 'Complimenti, hai portato a casa questa cifra!' :
-    `Il tuo pacco finale conteneva questo premio.`;
+  document.getElementById('final-desc').innerText = customMessage ||
+    (reason === 'OFFERTA_ACCETTATA' ? 'Complimenti, hai portato a casa questa cifra!' :
+    `Il tuo pacco finale conteneva questo premio.`);
   document.getElementById('final-modal').style.display = 'flex';
+  broadcast({type:'FINAL_RESULT', reason, amount, customMessage});
   broadcastState();
 }
 function closeFinal(){
