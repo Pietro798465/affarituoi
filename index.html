@@ -188,6 +188,12 @@ h1.brand{
 
 .boxes-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px;}
 @media (min-width:600px){ .boxes-grid{grid-template-columns:repeat(5,1fr);} }
+.boxes-grid.locked{opacity:.5; filter:grayscale(.4); pointer-events:none; position:relative;}
+.boxes-grid.locked::after{
+  content:"🔒 In attesa della chiamata del Dottore..."; position:absolute; inset:0; display:flex;
+  align-items:center; justify-content:center; text-align:center; font-weight:800; font-size:13px;
+  color:var(--gold); background:rgba(5,11,31,.55); border-radius:10px; padding:10px;
+}
 
 .box-card{
   background:
@@ -281,12 +287,14 @@ h1.brand{
 <h1 class="brand">AFFARI TUOI · LIVE</h1>
 
 <div class="juke-box">
-  <button class="juke-btn" onclick="playMusic(1)">🎵 Sigla</button>
-  <button class="juke-btn" onclick="playMusic(2)">🎵 Festa</button>
-  <button class="juke-btn" onclick="playMusic(3)">🎵 Tensione</button>
-  <button class="juke-btn" onclick="playMusic(4)">🎵 Suspense</button>
+  <button class="juke-btn" onclick="triggerSound('sigla')">🎵 Sigla</button>
+  <button class="juke-btn" onclick="triggerSound('festa')">🎵 Festa</button>
+  <button class="juke-btn" onclick="triggerSound('tensione')">🎵 Tensione</button>
+  <button class="juke-btn" onclick="triggerSound('suspense')">🎵 Suspense</button>
+  <button class="juke-btn" style="background:#7b2ff7" onclick="triggerSound('mantra')">🧘 Mantra</button>
+  <button class="juke-btn" style="background:#e09f3e" onclick="triggerSound('applausi')">👏 Applausi</button>
   <button class="juke-btn" style="background:var(--doctor)" onclick="stopMusic()">⏹ Stop</button>
-  <button class="juke-btn" style="background:#7b2ff7" onclick="newGameConfirm()">🔁 Nuova Partita</button>
+  <button class="juke-btn" style="background:#555" onclick="newGameConfirm()">🔁 Nuova Partita</button>
 </div>
 
 <div class="tv-card">
@@ -457,7 +465,7 @@ const REGIONI = [
   "Piemonte","Puglia","Sardegna","Sicilia","Toscana","Trentino-A.A.",
   "Umbria","Valle d'Aosta","Veneto"
 ];
-const VALORI_BLU  = ["Pacco Nero",1,5,10,20,50,75,100,200,500];
+const VALORI_BLU  = ["Pacco Nero",0,1,5,10,20,50,100,200,500];
 const VALORI_ROSSI = [5000,10000,15000,20000,30000,50000,75000,100000,200000,300000];
 
 /* ritmo delle chiamate: quante buste si aprono fra una chiamata e l'altra.
@@ -506,6 +514,8 @@ let state = {
   dealSecured: false,       // vero se il concorrente ha accettato un'offerta in denaro
   securedAmount: 0,
   pendingCounter: null,     // { amount } contro-proposta in attesa di risposta del Dottore
+  isFinalCall: false,       // vero quando resta un solo pacco: la chiamata è obbligatoria
+  finalCallMade: false,     // evita chiamate finali ripetute
   roomCode: "",
   currentOffer: null,
   playerName: "Concorrente"
@@ -519,7 +529,7 @@ let connToHost = null;  // client: connessione verso host
    UTILITY
    ============================================================ */
 function formatMoney(v){
-  if (v === "Pacco Nero") return "0 € (Pacco Nero)";
+  if (v === "Pacco Nero") return "Pacco Nero (valore incognito)";
   return typeof v === 'number' ? v.toLocaleString('it-IT') + " €" : v;
 }
 function setTVQuote(author, text){
@@ -537,11 +547,19 @@ function setConnPill(connected){
   pill.innerText = connected ? '● Connesso' : '● Disconnesso';
 }
 
-/* AUDIO */
-function playMusic(id){
+/* AUDIO
+   File attesi nella stessa cartella dell'HTML (da caricare su GitHub):
+   sigla.mp3, festa.mp3, tensione.mp3, suspense.mp3, mantra.mp3, applausi.mp3,
+   gennarino.mp3, zero.mp3, campane.mp3, gufo.mp3 */
+function playSound(key){
   const player = document.getElementById('audio-player');
-  player.src = `musica${id}.mp3`;
+  player.src = `${key}.mp3`;
   player.play().catch(()=>{});
+}
+/* riproduce il suono localmente e lo sincronizza su tutti i dispositivi collegati */
+function triggerSound(key){
+  playSound(key);
+  broadcast({type:'PLAY_SOUND', key});
 }
 function stopMusic(){ document.getElementById('audio-player').pause(); }
 function playPhoneRing(){
@@ -662,8 +680,9 @@ function newGameConfirm(){
 
 function initNewGame(){
   let shuffledRegions = [...REGIONI].sort(() => Math.random()-0.5);
-  let realPrizes = [1,5,10,20,50,75,100,200,500,5000,10000,15000,20000,30000,50000,75000,100000,200000,300000];
-  let paccoNeroSecretVal = realPrizes[Math.floor(Math.random()*realPrizes.length)];
+  let realPrizes = [0,1,5,10,20,50,100,200,500,5000,10000,15000,20000,30000,50000,75000,100000,200000,300000];
+  let nonZeroPrizes = realPrizes.filter(v => v !== 0);
+  let paccoNeroSecretVal = nonZeroPrizes[Math.floor(Math.random()*nonZeroPrizes.length)];
   let allValues = ["Pacco Nero", ...realPrizes].sort(() => Math.random()-0.5);
 
   state.regioneFortunata = REGIONI[Math.floor(Math.random()*REGIONI.length)];
@@ -678,6 +697,8 @@ function initNewGame(){
   state.dealSecured = false;
   state.securedAmount = 0;
   state.pendingCounter = null;
+  state.isFinalCall = false;
+  state.finalCallMade = false;
   state.rfAttempt = 1;
   state.currentOffer = null;
 
@@ -720,7 +741,9 @@ function syncPayload(){
     securedAmount: state.securedAmount,
     gennarinoBoxIndex: state.gennarinoBoxIndex,
     gennarinoFound: state.gennarinoFound,
-    playerName: state.playerName
+    playerName: state.playerName,
+    isFinalCall: state.isFinalCall,
+    finalCallMade: state.finalCallMade
   };
 }
 function sendFullSync(c){ c.send(syncPayload()); }
@@ -730,9 +753,11 @@ function handleDataAtHost(data, fromConn){
   switch(data.type){
     case 'OFFER':
       if (data.mode === 'CAMBIO' || data.mode === 'CARTE') state.cambioProposed = true;
+      if (remainingBoardCount() === 1) state.finalCallMade = true;
       state.callsMade++;
       state.openedThisRound = 0;
       state.roundTarget = computeRoundTarget(state.callsMade, remainingBoardCount());
+      checkBellsCue();
       playPhoneRing();
       state.currentOffer = { type: data.mode, amount: data.amount, hiddenAmount: data.hiddenAmount, carteMap: data.carteMap };
       setTVQuote("Dottore", data.quote);
@@ -792,6 +817,8 @@ function handleDataFromHost(data){
     state.gennarinoBoxIndex = data.gennarinoBoxIndex;
     state.gennarinoFound = data.gennarinoFound;
     state.playerName = data.playerName;
+    state.isFinalCall = data.isFinalCall;
+    state.finalCallMade = data.finalCallMade;
 
     if (state.role === 'DOCTOR'){
       if (state.phase === 'SETUP'){
@@ -858,6 +885,8 @@ function handleDataFromHost(data){
     document.getElementById('final-desc').innerText = data.customMessage ||
       (data.reason === 'OFFERTA_ACCETTATA' ? 'Complimenti, hai portato a casa questa cifra!' : `Il pacco finale conteneva questo premio.`);
     document.getElementById('final-modal').style.display = 'flex';
+  } else if (data.type === 'PLAY_SOUND'){
+    playSound(data.key);
   }
 }
 
@@ -898,11 +927,29 @@ function doctorConfirmReady(){
 function renderAll(){
   renderBoard();
   renderRoundTrack();
+  const grid = document.getElementById('boxes-grid');
+  if (grid){
+    const locked = state.playerBoxIndex !== null && !state.dealSecured && isBoardLocked();
+    grid.classList.toggle('locked', locked);
+  }
 }
 
-/* il gioco è pronto per una nuova chiamata del Dottore */
+/* il gioco è pronto per una nuova chiamata del Dottore.
+   Quando resta un solo pacco sul tabellone, la chiamata è obbligatoria (una sola volta). */
 function isCallReady(){
-  return !state.dealSecured && state.openedThisRound >= state.roundTarget && !remainingIsOne();
+  if (state.dealSecured) return false;
+  const remaining = remainingBoardCount();
+  if (remaining === 0) return false;
+  if (remaining === 1) return !state.finalCallMade;
+  return state.openedThisRound >= state.roundTarget;
+}
+
+/* il tabellone è bloccato: o si è raggiunta la soglia (si attende la chiamata) oppure
+   una chiamata è già in corso e il concorrente deve accettare/rifiutare prima di continuare */
+function isBoardLocked(){
+  if (state.dealSecured) return false;
+  if (state.currentOffer) return true;
+  return isCallReady();
 }
 
 /* pacchi ancora chiusi sul tabellone, escluso quello del concorrente */
@@ -910,6 +957,15 @@ function remainingBoardCount(){
   return state.boxes.filter((b,i)=> !b.isOpened && i !== state.playerBoxIndex).length;
 }
 function remainingIsOne(){ return remainingBoardCount() <= 1; }
+
+/* prima di ogni chiamata: se i tre premi rossi più alti sono ancora tutti in gioco, suonano le campane */
+function checkBellsCue(){
+  const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
+  const topThreeStillIn = [100000,200000,300000].every(v =>
+    remainingIdx.some(i => !state.boxes[i].isBlackBox && state.boxes[i].value === v)
+  );
+  if (topThreeStillIn) triggerSound('campane');
+}
 
 function computeRemainingEV(){
   const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
@@ -937,7 +993,7 @@ function renderCallStatsInto(containerId){
   }
   track.className = 'call-stats';
   const remaining = remainingBoardCount();
-  const toGo = Math.max(0, state.roundTarget - state.openedThisRound);
+  const toGo = remaining <= 1 ? 0 : Math.max(0, state.roundTarget - state.openedThisRound);
   const ev = computeRemainingEV();
   track.innerHTML = `
     <div class="stat-card">
@@ -996,6 +1052,10 @@ function renderBoard(){
    ============================================================ */
 function handleBoxClick(idx){
   if (state.phase !== 'PLAYING') return;
+  if (state.playerBoxIndex !== null && !state.dealSecured && isBoardLocked()){
+    alert('⏳ Tabellone bloccato: bisogna attendere la chiamata (e la risposta) del Dottore prima di continuare.');
+    return;
+  }
   if (state.role === 'PLAYER' && connToHost){
     connToHost.send({type:'CLICK_BOX', index: idx});
   } else if (state.role === 'PRESENTER' || state.role === 'AUTO'){
@@ -1017,18 +1077,27 @@ function openBox(idx){
   // il pacco del concorrente si apre solo in modalità "rivelazione" dopo un'offerta accettata
   if (idx === state.playerBoxIndex && !state.dealSecured) return;
 
+  // tabellone bloccato: si attende la chiamata (e la risoluzione) del Dottore
+  if (!state.dealSecured && isBoardLocked()) return;
+
   state.boxes[idx].isOpened = true;
   state.openedCount++;
 
   let openedVal = state.boxes[idx].value;
+  const isBlack = state.boxes[idx].isBlackBox;
   playChime(openedVal < 5000);
 
   if (idx === state.gennarinoBoxIndex && !state.gennarinoFound){
     state.gennarinoFound = true;
+    triggerSound('gennarino');
     setTimeout(()=>alert(`🐾 COLPO DI GENNARINO! Bonus speciale conquistato, complimenti!`), 200);
+  } else if (openedVal === 0 && !isBlack){
+    triggerSound('zero');
+  } else if (typeof openedVal === 'number' && openedVal >= 50000){
+    triggerSound('gufo');
   }
 
-  if (state.boxes[idx].isBlackBox){
+  if (isBlack){
     setTimeout(()=>alert(`🎁 PACCO NERO SVELATO!\nIl valore misterioso, ignoto a chiunque fino ad ora, era: ${formatMoney(openedVal)}`), 250);
   }
 
@@ -1059,7 +1128,7 @@ function openBox(idx){
   broadcastState();
 
   if (remainingIsOne()){
-    setTimeout(()=>triggerFinalChoice(), 500);
+    setTimeout(()=>triggerFinalCallSequence(), 500);
     return;
   }
 
@@ -1211,7 +1280,20 @@ function rejectOffer(fromRemote){
   if (!fromRemote && state.role === 'PLAYER' && connToHost){
     connToHost.send({type:'PLAYER_ACTION', action:'REJECT'});
   }
+  const wasFinal = state.isFinalCall;
   state.currentOffer = null;
+
+  if (wasFinal){
+    // rifiuto dell'ultima offerta obbligatoria: si tiene il proprio pacco, gran finale
+    const otherIdx = state.boxes.findIndex((b,i)=> !b.isOpened && i !== state.playerBoxIndex);
+    if (otherIdx !== -1) state.boxes[otherIdx].isOpened = true;
+    if (state.playerBoxIndex !== null) state.boxes[state.playerBoxIndex].isOpened = true;
+    renderAll();
+    broadcastState();
+    endGame('FINALE', state.playerBoxIndex !== null ? state.boxes[state.playerBoxIndex].value : 0);
+    return;
+  }
+
   renderAll();
 }
 
@@ -1283,11 +1365,24 @@ function showSwapModal(){
 }
 
 function executeSwap(newBoxIndex){
+  const wasFinal = state.isFinalCall;
+  const oldBoxIndex = state.playerBoxIndex;
   state.playerBoxIndex = newBoxIndex;
   document.getElementById('swap-modal').style.display = 'none';
   document.getElementById('game-status').innerText = `Pacco Concorrente: N° ${state.boxes[newBoxIndex].number} (${state.boxes[newBoxIndex].region})`;
   setTVQuote("Stefano", "Il pacco è stato cambiato! Vediamo se la sorte aiuterà i coraggiosi.");
   state.currentOffer = null;
+
+  if (wasFinal){
+    // cambio nell'ultima chiamata obbligatoria: gran finale, si rivelano entrambi i pacchi
+    if (oldBoxIndex !== null) state.boxes[oldBoxIndex].isOpened = true;
+    state.boxes[newBoxIndex].isOpened = true;
+    renderAll();
+    broadcastState();
+    endGame('FINALE', state.boxes[newBoxIndex].value);
+    return;
+  }
+
   renderAll();
   broadcastState();
 }
@@ -1306,6 +1401,7 @@ function computeOfferAmount(remainingPrizes, redRatio){
 }
 
 function triggerAutoDoctorCall(){
+  if (remainingBoardCount() === 1) state.finalCallMade = true;
   state.callsMade++;
   state.openedThisRound = 0;
   state.roundTarget = computeRoundTarget(state.callsMade, remainingBoardCount());
@@ -1316,7 +1412,7 @@ function triggerAutoDoctorCall(){
   let redRatio = activeReds / remainingPrizes.length;
   let docQuote = FRASI_DOTTORE[Math.floor(Math.random()*FRASI_DOTTORE.length)];
 
-  if (activeReds === 0 && Math.random() < 0.5){
+  if (!state.isFinalCall && activeReds === 0 && Math.random() < 0.5){
     setTVQuote("Dottore", "I premi rossi sono finiti. Che ne dite della Regione Fortunata?");
     triggerRegioneFortunata();
     return;
@@ -1346,6 +1442,7 @@ function triggerAutoDoctorCall(){
 
   playPhoneRing();
   setTVQuote("Dottore", docQuote);
+  checkBellsCue();
   renderAll();
   broadcastState();
   showCallModalOnDevice(state.currentOffer.type, state.currentOffer.amount, docQuote);
@@ -1361,11 +1458,14 @@ function renderDoctorDashboard(){
   renderCallStatsInto('doc-call-stats');
 
   const ready = isCallReady();
+  const remaining = remainingBoardCount();
   const statusEl = document.getElementById('doc-call-status');
   if (state.dealSecured){
     statusEl.innerHTML = `<span style="color:var(--teal);">🔓 Offerta già assicurata: si scoprono i pacchi solo per curiosità.</span>`;
-  } else if (remainingIsOne()){
-    statusEl.innerHTML = `<span style="color:var(--gold);">🏁 È rimasto un solo pacco: si va verso il finale, niente altre chiamate.</span>`;
+  } else if (remaining === 1 && state.finalCallMade){
+    statusEl.innerHTML = `<span style="color:var(--gold);">🏁 Ultima chiamata in corso: attendi la decisione del concorrente.</span>`;
+  } else if (remaining === 1 && ready){
+    statusEl.innerHTML = `<span style="color:var(--doctor); font-size:14px;">🏁 ULTIMO PACCO! La chiamata è obbligatoria: offerta, cambio o carte.</span>`;
   } else if (ready){
     statusEl.innerHTML = `<span style="color:var(--teal);">✅ Puoi chiamare ora! Invia offerta, cambio o carte.</span>`;
   } else {
@@ -1477,22 +1577,18 @@ function showRFResultModal(data){
 /* ============================================================
    FINALE
    ============================================================ */
-function triggerFinalChoice(){
-  if (state.dealSecured) return; // l'offerta è già stata accettata, si è in modalità rivelazione
-  const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
-  if (remainingIdx.length !== 1) return;
-  setTVQuote("Stefano", "È rimasto un solo pacco oltre al tuo. Ultima decisione della serata!");
-  if (state.role === 'AUTO' || state.role === 'PRESENTER'){
-    const other = remainingIdx[0];
-    const keep = confirm(`Rimane solo il Pacco ${state.boxes[other].number}.\nPremi OK per TENERE il tuo pacco, Annulla per CAMBIARLO con l'altro.`);
-    if (!keep) executeSwap(other);
-    // rivela entrambi i pacchi rimasti sul tabellone per il gran finale
-    state.boxes[other].isOpened = true;
-    state.boxes[state.playerBoxIndex].isOpened = true;
-    renderAll();
-    broadcastState();
-    endGame('FINALE', state.boxes[state.playerBoxIndex].value);
+function triggerFinalCallSequence(){
+  if (state.dealSecured || state.finalCallMade) return;
+  if (remainingBoardCount() !== 1) return;
+  state.isFinalCall = true;
+  setTVQuote("Stefano", "È rimasto un solo pacco oltre al tuo. Il Dottore deve fare un'ultima proposta obbligatoria!");
+  renderAll();
+  broadcastState();
+  if (state.role === 'AUTO'){
+    triggerAutoDoctorCall();
   }
+  // per PRESENTER/PLAYER (Dottore umano): isCallReady() ora è vero, la dashboard del
+  // Dottore mostrerà i pulsanti sbloccati per fare l'ultima chiamata.
 }
 
 function endGame(reason, amount, customMessage){
