@@ -180,8 +180,8 @@ h1.brand{
   background:linear-gradient(180deg, var(--panel-2), var(--panel));
   border:1px solid var(--gold); border-radius:10px; padding:6px 4px; text-align:center;
 }
-.stat-card .stat-label{font-size:8.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim); font-weight:700; display:block;}
-.stat-card .stat-value{font-family:'Bebas Neue',sans-serif; font-size:19px; color:var(--gold); letter-spacing:1px; display:block; margin-top:2px;}
+.stat-card .stat-label{font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim); font-weight:700; display:block;}
+.stat-card .stat-value{font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--gold); letter-spacing:1px; display:block; margin-top:2px;}
 .call-stats.deal-secured{grid-template-columns:1fr; }
 .call-stats.deal-secured .stat-card{border-color:var(--teal);}
 .status-actions{margin-top:10px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;}
@@ -236,6 +236,9 @@ h1.brand{
 .secret-table td{border-top:1px solid var(--line); padding:7px 6px; text-align:center;}
 .secret-table tr.mine{background:rgba(6,214,160,.10);}
 .secret-table tr.gennarino td:first-child{color:#ffb703;}
+.secret-table tr.doc-row-mine{background:rgba(6,214,160,.18); box-shadow:inset 3px 0 0 var(--teal);}
+.secret-table tr.doc-row-opened{background:rgba(255,59,92,.10); opacity:.6;}
+.secret-table tr.doc-row-opened td{text-decoration:line-through;}
 
 /* ---------- setup (allestimento) screen ---------- */
 .setup-banner{
@@ -349,7 +352,6 @@ h1.brand{
       <div class="status-actions">
         <button class="btn small danger" onclick="triggerCliffhanger()">🎬 Manciata di secondi...</button>
         <button class="btn small purple" onclick="triggerRegioneFortunata()">🍀 Regione Fortunata</button>
-        <button class="btn small ghost" id="btn-call-doctor" style="display:none;" onclick="manualCallDoctor()">☎️ Chiama il Dottore</button>
       </div>
     </div>
     <div class="boxes-grid" id="boxes-grid"></div>
@@ -363,21 +365,23 @@ h1.brand{
   <div class="status-box">
     <h2 style="font-family:'Bebas Neue',sans-serif; letter-spacing:1px; color:var(--gold); margin:0;">☎️ DASHBOARD DOTTORE</h2>
     <div style="font-size:12px; color:var(--text-dim); margin-top:4px;">Stanza: <b id="doc-room-code">-</b> · Pacco Concorrente: <b id="doc-player-box">-</b></div>
+    <div class="call-stats" id="doc-call-stats"></div>
+    <div id="doc-call-status" style="margin-top:8px; font-weight:800; font-size:13px;"></div>
   </div>
 
   <div style="background:var(--panel); padding:14px; margin-top:10px; border-radius:12px; border:1px solid var(--line);">
     <h3 style="margin-top:0;">Invia proposta</h3>
     <input type="number" id="offer-input" placeholder="Cifra in €" style="padding:10px; font-size:16px; width:55%; border-radius:8px; border:1px solid var(--line); background:#0a1533; color:#fff;">
     <div style="margin-top:8px;">
-      <button class="btn teal" onclick="sendManualOffer('OFFERTA')">💰 Invia Offerta</button>
-      <button class="btn" style="background:#ff9f1c;" onclick="sendManualOffer('CAMBIO')">🔄 Proponi Cambio</button>
-      <button class="btn purple" onclick="sendManualOffer('CARTE')">🎴 Proponi Carte</button>
+      <button class="btn teal" id="btn-send-offerta" onclick="sendManualOffer('OFFERTA')">💰 Invia Offerta</button>
+      <button class="btn" id="btn-send-cambio" style="background:#ff9f1c;" onclick="sendManualOffer('CAMBIO')">🔄 Proponi Cambio</button>
+      <button class="btn purple" id="btn-send-carte" onclick="sendManualOffer('CARTE')">🎴 Proponi Carte</button>
     </div>
   </div>
 
-  <h3>Contenuto reale dei pacchi non aperti</h3>
+  <h3>Contenuto reale di tutti i pacchi</h3>
   <table class="secret-table" id="secret-table-live">
-    <thead><tr><th>Pacco</th><th>Regione</th><th>Nome</th><th>Valore reale</th></tr></thead>
+    <thead><tr><th>Pacco</th><th>Regione</th><th>Stato</th><th>Valore reale</th></tr></thead>
     <tbody id="secret-tbody"></tbody>
   </table>
 </div>
@@ -726,12 +730,16 @@ function handleDataAtHost(data, fromConn){
   switch(data.type){
     case 'OFFER':
       if (data.mode === 'CAMBIO' || data.mode === 'CARTE') state.cambioProposed = true;
+      state.callsMade++;
+      state.openedThisRound = 0;
+      state.roundTarget = computeRoundTarget(state.callsMade, remainingBoardCount());
       playPhoneRing();
       state.currentOffer = { type: data.mode, amount: data.amount, hiddenAmount: data.hiddenAmount, carteMap: data.carteMap };
       setTVQuote("Dottore", data.quote);
       showCallModalOnDevice(data.mode, data.amount, data.quote);
       broadcast(data);
       broadcastState();
+      renderAll();
       break;
     case 'CLICK_BOX':
       openBox(data.index);
@@ -890,9 +898,11 @@ function doctorConfirmReady(){
 function renderAll(){
   renderBoard();
   renderRoundTrack();
-  const showCallBtn = (state.role === 'PRESENTER' && state.phase === 'PLAYING' &&
-                        !state.dealSecured && state.openedThisRound >= state.roundTarget && !remainingIsOne());
-  document.getElementById('btn-call-doctor').style.display = showCallBtn ? 'inline-block' : 'none';
+}
+
+/* il gioco è pronto per una nuova chiamata del Dottore */
+function isCallReady(){
+  return !state.dealSecured && state.openedThisRound >= state.roundTarget && !remainingIsOne();
 }
 
 /* pacchi ancora chiusi sul tabellone, escluso quello del concorrente */
@@ -909,7 +919,13 @@ function computeRemainingEV(){
 }
 
 function renderRoundTrack(){
-  const track = document.getElementById('round-track');
+  renderCallStatsInto('round-track');
+  if (state.role === 'DOCTOR') renderCallStatsInto('doc-call-stats');
+}
+
+function renderCallStatsInto(containerId){
+  const track = document.getElementById(containerId);
+  if (!track) return;
   if (state.dealSecured){
     track.className = 'call-stats deal-secured';
     track.innerHTML = `
@@ -938,7 +954,7 @@ function renderRoundTrack(){
     </div>
     <div class="stat-card">
       <span class="stat-label">Valore atteso</span>
-      <span class="stat-value" style="font-size:15px;">${formatMoney(ev)}</span>
+      <span class="stat-value" style="font-size:17px;">${formatMoney(ev)}</span>
     </div>`;
 }
 
@@ -1012,6 +1028,10 @@ function openBox(idx){
     setTimeout(()=>alert(`🐾 COLPO DI GENNARINO! Bonus speciale conquistato, complimenti!`), 200);
   }
 
+  if (state.boxes[idx].isBlackBox){
+    setTimeout(()=>alert(`🎁 PACCO NERO SVELATO!\nIl valore misterioso, ignoto a chiunque fino ad ora, era: ${formatMoney(openedVal)}`), 250);
+  }
+
   document.getElementById('game-status').innerText =
     `Pacco Concorrente: N° ${state.boxes[state.playerBoxIndex].number} (${state.boxes[state.playerBoxIndex].region})`;
 
@@ -1047,19 +1067,8 @@ function openBox(idx){
     if (state.role === 'AUTO'){
       setTimeout(()=>triggerAutoDoctorCall(), 700);
     }
-    renderAll(); // mostra bottone "chiama il dottore" per il presentatore
+    renderAll(); // aggiorna i contatori: se readyForCall, il Dottore vedrà i pulsanti sbloccati
   }
-}
-
-function manualCallDoctor(){
-  state.callsMade++;
-  state.openedThisRound = 0;
-  state.roundTarget = computeRoundTarget(state.callsMade, remainingBoardCount());
-  setTVQuote("Stefano", "Squilla il telefono... è il Dottore!");
-  document.getElementById('btn-call-doctor').style.display = 'none';
-  renderRoundTrack();
-  broadcastState();
-  // Il vero dottore (umano) userà la sua dashboard per inviare l'offerta manualmente.
 }
 
 /* ============================================================
@@ -1156,6 +1165,9 @@ function applyCounterDecision(accepted, amount, newOffer){
 
 function sendManualOffer(mode){
   if (!connToHost) return alert("Non connesso al Presentatore!");
+  if (!isCallReady()){
+    return alert(`Non è ancora il momento della chiamata: mancano ${Math.max(0, state.roundTarget - state.openedThisRound)} pacchi da aprire.`);
+  }
   const val = document.getElementById('offer-input').value;
   if ((mode === 'OFFERTA' || mode === 'CARTE') && (!val || isNaN(val) || Number(val) <= 0)){
     return alert(mode === 'CARTE'
@@ -1200,12 +1212,7 @@ function rejectOffer(fromRemote){
     connToHost.send({type:'PLAYER_ACTION', action:'REJECT'});
   }
   state.currentOffer = null;
-  if (state.role === 'PRESENTER' || state.role === 'AUTO'){
-    manualCallDoctorReset();
-  }
-}
-function manualCallDoctorReset(){
-  document.getElementById('btn-call-doctor').style.display = 'none';
+  renderAll();
 }
 
 /* Le Carte: una nasconde il Cambio, l'altra un'offerta in denaro */
@@ -1230,7 +1237,6 @@ function enterRevealMode(amount){
   state.dealSecured = true;
   state.securedAmount = amount;
   state.currentOffer = null;
-  document.getElementById('btn-call-doctor').style.display = 'none';
   setTVQuote("Stefano", `Affare fatto: ${formatMoney(amount)} assicurati! Ma restiamo qui a scoprire insieme cosa nascondevano i pacchi rimasti...`);
   renderAll();
   broadcastState();
@@ -1284,7 +1290,6 @@ function executeSwap(newBoxIndex){
   state.currentOffer = null;
   renderAll();
   broadcastState();
-  if (state.role === 'PRESENTER') manualCallDoctorReset();
 }
 
 /* ============================================================
@@ -1352,24 +1357,56 @@ function triggerAutoDoctorCall(){
 function renderDoctorDashboard(){
   document.getElementById('doc-player-box').innerText = state.playerBoxIndex !== null
     ? `N° ${state.boxes[state.playerBoxIndex].number} (${state.boxes[state.playerBoxIndex].region})` : '-';
+
+  renderCallStatsInto('doc-call-stats');
+
+  const ready = isCallReady();
+  const statusEl = document.getElementById('doc-call-status');
+  if (state.dealSecured){
+    statusEl.innerHTML = `<span style="color:var(--teal);">🔓 Offerta già assicurata: si scoprono i pacchi solo per curiosità.</span>`;
+  } else if (remainingIsOne()){
+    statusEl.innerHTML = `<span style="color:var(--gold);">🏁 È rimasto un solo pacco: si va verso il finale, niente altre chiamate.</span>`;
+  } else if (ready){
+    statusEl.innerHTML = `<span style="color:var(--teal);">✅ Puoi chiamare ora! Invia offerta, cambio o carte.</span>`;
+  } else {
+    const toGo = Math.max(0, state.roundTarget - state.openedThisRound);
+    statusEl.innerHTML = `<span style="color:var(--text-dim);">⏳ Attendi ancora ${toGo} pacco/i prima di poter chiamare.</span>`;
+  }
+
+  ['btn-send-offerta','btn-send-cambio','btn-send-carte'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !ready || state.dealSecured;
+  });
+
   const tbody = document.getElementById('secret-tbody');
   if (!tbody) return;
   tbody.innerHTML = '';
-  state.boxes.forEach((b, idx) => {
-    if (!b.isOpened){
-      const isMine = idx === state.playerBoxIndex;
-      const gTag = idx === state.gennarinoBoxIndex ? ' 🐾' : '';
-      const valDisplay = b.isBlackBox
-        ? `🔒 sigillato`
-        : `${formatMoney(b.value)}${gTag}`;
-      tbody.innerHTML += `
-        <tr class="${isMine?'mine':''} ${b.isBlackBox?'gennarino':''}">
-          <td><b>${b.number}</b></td>
-          <td>${b.region}</td>
-          <td>${b.playerName}</td>
-          <td style="color:var(--gold); font-weight:800;">${valDisplay}</td>
-        </tr>`;
+
+  const mineIdx = state.playerBoxIndex;
+  const others = state.boxes.map((b,i)=>i).filter(i => i !== mineIdx);
+  const unopened = others.filter(i => !state.boxes[i].isOpened).sort((a,b)=>state.boxes[a].number-state.boxes[b].number);
+  const opened = others.filter(i => state.boxes[i].isOpened).sort((a,b)=>state.boxes[a].number-state.boxes[b].number);
+  const orderedIdx = mineIdx !== null ? [mineIdx, ...unopened, ...opened] : [...unopened, ...opened];
+
+  orderedIdx.forEach(idx => {
+    const b = state.boxes[idx];
+    const isMine = idx === mineIdx;
+    const gTag = idx === state.gennarinoBoxIndex ? ' 🐾' : '';
+    let valDisplay;
+    if (b.isBlackBox && !b.isOpened){
+      valDisplay = `🔒 sigillato`;
+    } else {
+      valDisplay = `${formatMoney(b.value)}${gTag}`;
     }
+    const rowClass = isMine ? 'doc-row-mine' : (b.isOpened ? 'doc-row-opened' : '');
+    const statusLabel = isMine ? '🟢 Concorrente' : (b.isOpened ? '🔴 Aperto' : '⬜ Sul tabellone');
+    tbody.innerHTML += `
+      <tr class="${rowClass}">
+        <td><b>${b.number}</b></td>
+        <td>${b.region}</td>
+        <td>${statusLabel}</td>
+        <td style="color:var(--gold); font-weight:800;">${valDisplay}</td>
+      </tr>`;
   });
 }
 
