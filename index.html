@@ -384,6 +384,8 @@ h1.brand{
       <button class="btn teal" id="btn-send-offerta" onclick="sendManualOffer('OFFERTA')">💰 Invia Offerta</button>
       <button class="btn" id="btn-send-cambio" style="background:#ff9f1c;" onclick="sendManualOffer('CAMBIO')">🔄 Proponi Cambio</button>
       <button class="btn purple" id="btn-send-carte" onclick="sendManualOffer('CARTE')">🎴 Proponi Carte</button>
+      <br>
+      <button class="btn ghost" id="btn-send-auto" style="margin-top:8px; border-color:var(--gold); color:var(--gold);" onclick="sendAutoOffer()">🤖 Offerta Automatica (decide il programma)</button>
     </div>
   </div>
 
@@ -516,6 +518,7 @@ let state = {
   pendingCounter: null,     // { amount } contro-proposta in attesa di risposta del Dottore
   isFinalCall: false,       // vero quando resta un solo pacco: la chiamata è obbligatoria
   finalCallMade: false,     // evita chiamate finali ripetute
+  awaitingFinalReveal: false, // vero dopo l'ultima chiamata risolta: i 2 pacchi restanti vanno aperti con un click in più
   roomCode: "",
   currentOffer: null,
   playerName: "Concorrente"
@@ -699,6 +702,7 @@ function initNewGame(){
   state.pendingCounter = null;
   state.isFinalCall = false;
   state.finalCallMade = false;
+  state.awaitingFinalReveal = false;
   state.rfAttempt = 1;
   state.currentOffer = null;
 
@@ -743,7 +747,8 @@ function syncPayload(){
     gennarinoFound: state.gennarinoFound,
     playerName: state.playerName,
     isFinalCall: state.isFinalCall,
-    finalCallMade: state.finalCallMade
+    finalCallMade: state.finalCallMade,
+    awaitingFinalReveal: state.awaitingFinalReveal
   };
 }
 function sendFullSync(c){ c.send(syncPayload()); }
@@ -819,6 +824,7 @@ function handleDataFromHost(data){
     state.playerName = data.playerName;
     state.isFinalCall = data.isFinalCall;
     state.finalCallMade = data.finalCallMade;
+    state.awaitingFinalReveal = data.awaitingFinalReveal;
 
     if (state.role === 'DOCTOR'){
       if (state.phase === 'SETUP'){
@@ -947,7 +953,7 @@ function isCallReady(){
 /* il tabellone è bloccato: o si è raggiunta la soglia (si attende la chiamata) oppure
    una chiamata è già in corso e il concorrente deve accettare/rifiutare prima di continuare */
 function isBoardLocked(){
-  if (state.dealSecured) return false;
+  if (state.dealSecured || state.awaitingFinalReveal) return false;
   if (state.currentOffer) return true;
   return isCallReady();
 }
@@ -988,6 +994,15 @@ function renderCallStatsInto(containerId){
       <div class="stat-card">
         <span class="stat-label">🔓 Offerta assicurata</span>
         <span class="stat-value" style="color:var(--teal); font-size:16px;">Ora si scoprono i pacchi rimasti per curiosità</span>
+      </div>`;
+    return;
+  }
+  if (state.awaitingFinalReveal){
+    track.className = 'call-stats deal-secured';
+    track.innerHTML = `
+      <div class="stat-card" style="border-color:var(--doctor);">
+        <span class="stat-label">🏁 Ultima chiamata risolta</span>
+        <span class="stat-value" style="color:var(--doctor); font-size:16px;">Apri i pacchi rimasti per scoprire l'esito!</span>
       </div>`;
     return;
   }
@@ -1033,7 +1048,7 @@ function renderBoard(){
   grid.innerHTML = '';
   state.boxes.forEach((b, idx) => {
     const card = document.createElement('div');
-    const canOpenOwn = state.dealSecured && idx === state.playerBoxIndex && !b.isOpened;
+    const canOpenOwn = (state.dealSecured || state.awaitingFinalReveal) && idx === state.playerBoxIndex && !b.isOpened;
     card.className = `box-card ${b.isOpened?'opened':''} ${state.playerBoxIndex===idx?'player':''} ${canOpenOwn?'reveal-ready':''}`;
     card.innerHTML = `
       <div class="b-num">${b.number}</div>
@@ -1075,10 +1090,11 @@ function openBox(idx){
   }
 
   // il pacco del concorrente si apre solo in modalità "rivelazione" dopo un'offerta accettata
-  if (idx === state.playerBoxIndex && !state.dealSecured) return;
+  // oppure durante la rivelazione finale (rifiuto/cambio dell'ultima chiamata obbligatoria)
+  if (idx === state.playerBoxIndex && !state.dealSecured && !state.awaitingFinalReveal) return;
 
   // tabellone bloccato: si attende la chiamata (e la risoluzione) del Dottore
-  if (!state.dealSecured && isBoardLocked()) return;
+  if (!state.dealSecured && !state.awaitingFinalReveal && isBoardLocked()) return;
 
   state.boxes[idx].isOpened = true;
   state.openedCount++;
@@ -1111,6 +1127,17 @@ function openBox(idx){
     const allBoxesOpen = state.boxes.every(b => b.isOpened);
     if (allBoxesOpen || idx === state.playerBoxIndex){
       setTimeout(()=>showRevealSummary(), 400);
+    }
+    return;
+  }
+
+  /* ---- gran finale senza accordo: ultima chiamata rifiutata (o Cambio finale) — ogni pacco
+     va aperto con un click, la partita si chiude quando si apre il pacco del concorrente ---- */
+  if (state.awaitingFinalReveal){
+    renderAll();
+    broadcastState();
+    if (idx === state.playerBoxIndex){
+      setTimeout(()=>endGame('FINALE', state.boxes[state.playerBoxIndex].value), 400);
     }
     return;
   }
@@ -1284,13 +1311,12 @@ function rejectOffer(fromRemote){
   state.currentOffer = null;
 
   if (wasFinal){
-    // rifiuto dell'ultima offerta obbligatoria: si tiene il proprio pacco, gran finale
-    const otherIdx = state.boxes.findIndex((b,i)=> !b.isOpened && i !== state.playerBoxIndex);
-    if (otherIdx !== -1) state.boxes[otherIdx].isOpened = true;
-    if (state.playerBoxIndex !== null) state.boxes[state.playerBoxIndex].isOpened = true;
+    // rifiuto dell'ultima offerta obbligatoria: si tiene il proprio pacco.
+    // Niente svelamento automatico: i pacchi restanti si aprono con un click in più.
+    setTVQuote("Stefano", "Il concorrente tiene il proprio pacco! Prima di chiudere, scopriamo insieme cosa nascondevano i pacchi...");
+    state.awaitingFinalReveal = true;
     renderAll();
     broadcastState();
-    endGame('FINALE', state.playerBoxIndex !== null ? state.boxes[state.playerBoxIndex].value : 0);
     return;
   }
 
@@ -1374,12 +1400,12 @@ function executeSwap(newBoxIndex){
   state.currentOffer = null;
 
   if (wasFinal){
-    // cambio nell'ultima chiamata obbligatoria: gran finale, si rivelano entrambi i pacchi
-    if (oldBoxIndex !== null) state.boxes[oldBoxIndex].isOpened = true;
-    state.boxes[newBoxIndex].isOpened = true;
+    // cambio nell'ultima chiamata obbligatoria: niente svelamento automatico,
+    // i pacchi restanti (il nuovo pacco del concorrente e quello scambiato) si aprono con un click in più
+    setTVQuote("Stefano", "Pacco cambiato! Prima di chiudere, scopriamo insieme cosa nascondevano i pacchi...");
+    state.awaitingFinalReveal = true;
     renderAll();
     broadcastState();
-    endGame('FINALE', state.boxes[newBoxIndex].value);
     return;
   }
 
@@ -1400,17 +1426,47 @@ function computeOfferAmount(remainingPrizes, redRatio){
   return offerVal;
 }
 
+/* Decide quale tipo di proposta fare (offerta/cambio/carte) e con quali cifre, in base allo
+   stato corrente del tabellone. Non muta lo stato: può essere usata sia dal Dottore IA in
+   modalità singolo giocatore, sia dal tasto "Offerta Automatica" a disposizione del Dottore
+   umano in modalità multi-dispositivo. */
+function computeAIOffer(){
+  const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
+  const remainingPrizes = remainingIdx.map(i => state.boxes[i].value);
+  const activeReds = remainingPrizes.filter(v => v >= 5000).length;
+  const redRatio = remainingPrizes.length ? activeReds / remainingPrizes.length : 0;
+  const docQuote = FRASI_DOTTORE[Math.floor(Math.random()*FRASI_DOTTORE.length)];
+
+  // il regolamento impone almeno un Cambio a partita: se siamo vicini alla fine e non è mai
+  // stato proposto, il Dottore lo forza ora (mai durante l'ultima chiamata obbligatoria)
+  const mustForceCambio = !state.cambioProposed && remainingIdx.length <= 6 && !state.isFinalCall;
+  const cambioChance = state.isFinalCall ? 0 : (0.20 + (redRatio < 0.3 ? 0.15 : 0)); // tabellone "blu" -> più cambi
+  const randType = Math.random();
+
+  if (mustForceCambio || (!state.isFinalCall && randType < cambioChance)){
+    return { mode:'CAMBIO', amount:'CAMBIO PACCO', quote:docQuote };
+  }
+  if (!state.isFinalCall && randType < cambioChance + 0.12){
+    const hiddenAmount = computeOfferAmount(remainingPrizes, redRatio);
+    const cardsFlip = Math.random() < 0.5;
+    return {
+      mode:'CARTE', amount:'LE CARTE', hiddenAmount,
+      carteMap: cardsFlip ? {1:'CAMBIO',2:'OFFERTA'} : {1:'OFFERTA',2:'CAMBIO'},
+      quote:docQuote
+    };
+  }
+  const offerVal = computeOfferAmount(remainingPrizes, redRatio);
+  return { mode:'OFFERTA', amount: offerVal, quote:docQuote };
+}
+
 function triggerAutoDoctorCall(){
   if (remainingBoardCount() === 1) state.finalCallMade = true;
   state.callsMade++;
   state.openedThisRound = 0;
   state.roundTarget = computeRoundTarget(state.callsMade, remainingBoardCount());
 
-  let remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
-  let remainingPrizes = remainingIdx.map(i => state.boxes[i].value);
-  let activeReds = remainingPrizes.filter(v => v >= 5000).length;
-  let redRatio = activeReds / remainingPrizes.length;
-  let docQuote = FRASI_DOTTORE[Math.floor(Math.random()*FRASI_DOTTORE.length)];
+  const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
+  const activeReds = remainingIdx.filter(i => state.boxes[i].value >= 5000).length;
 
   if (!state.isFinalCall && activeReds === 0 && Math.random() < 0.5){
     setTVQuote("Dottore", "I premi rossi sono finiti. Che ne dite della Regione Fortunata?");
@@ -1418,34 +1474,30 @@ function triggerAutoDoctorCall(){
     return;
   }
 
-  // il regolamento impone almeno un Cambio a partita: se siamo vicini alla fine e non è mai
-  // stato proposto, il Dottore lo forza ora
-  const mustForceCambio = !state.cambioProposed && remainingIdx.length <= 6;
-  const cambioChance = 0.20 + (redRatio < 0.3 ? 0.15 : 0); // tabellone "blu" -> più cambi
-  let randType = Math.random();
-
-  if (mustForceCambio || randType < cambioChance){
-    state.cambioProposed = true;
-    state.currentOffer = { type:'CAMBIO', amount:'CAMBIO PACCO' };
-  } else if (randType < cambioChance + 0.12){
-    const hiddenAmount = computeOfferAmount(remainingPrizes, redRatio);
-    const cardsFlip = Math.random() < 0.5;
-    state.cambioProposed = true; // una delle due carte è comunque un Cambio
-    state.currentOffer = {
-      type:'CARTE', amount:'LE CARTE', hiddenAmount,
-      carteMap: cardsFlip ? {1:'CAMBIO',2:'OFFERTA'} : {1:'OFFERTA',2:'CAMBIO'}
-    };
-  } else {
-    const offerVal = computeOfferAmount(remainingPrizes, redRatio);
-    state.currentOffer = { type:'OFFERTA', amount: offerVal };
-  }
+  const offer = computeAIOffer();
+  if (offer.mode === 'CAMBIO' || offer.mode === 'CARTE') state.cambioProposed = true;
+  state.currentOffer = { type:offer.mode, amount:offer.amount, hiddenAmount:offer.hiddenAmount, carteMap:offer.carteMap };
 
   playPhoneRing();
-  setTVQuote("Dottore", docQuote);
+  setTVQuote("Dottore", offer.quote);
   checkBellsCue();
   renderAll();
   broadcastState();
-  showCallModalOnDevice(state.currentOffer.type, state.currentOffer.amount, docQuote);
+  showCallModalOnDevice(offer.mode, offer.amount, offer.quote);
+}
+
+/* Il Dottore umano preme "Offerta Automatica": il programma calcola e invia lui la proposta,
+   con la stessa logica del Dottore IA. Rispetta comunque il ritmo delle chiamate. */
+function sendAutoOffer(){
+  if (!connToHost) return alert("Non connesso al Presentatore!");
+  if (!isCallReady()){
+    return alert(`Non è ancora il momento della chiamata: mancano ${Math.max(0, state.roundTarget - state.openedThisRound)} pacchi da aprire.`);
+  }
+  const offer = computeAIOffer();
+  connToHost.send({
+    type:'OFFER', mode: offer.mode, amount: offer.amount,
+    hiddenAmount: offer.hiddenAmount, carteMap: offer.carteMap, quote: offer.quote
+  });
 }
 
 /* ============================================================
@@ -1462,6 +1514,8 @@ function renderDoctorDashboard(){
   const statusEl = document.getElementById('doc-call-status');
   if (state.dealSecured){
     statusEl.innerHTML = `<span style="color:var(--teal);">🔓 Offerta già assicurata: si scoprono i pacchi solo per curiosità.</span>`;
+  } else if (state.awaitingFinalReveal){
+    statusEl.innerHTML = `<span style="color:var(--doctor);">🏁 Partita decisa: il concorrente sta aprendo gli ultimi pacchi.</span>`;
   } else if (remaining === 1 && state.finalCallMade){
     statusEl.innerHTML = `<span style="color:var(--gold);">🏁 Ultima chiamata in corso: attendi la decisione del concorrente.</span>`;
   } else if (remaining === 1 && ready){
@@ -1473,7 +1527,7 @@ function renderDoctorDashboard(){
     statusEl.innerHTML = `<span style="color:var(--text-dim);">⏳ Attendi ancora ${toGo} pacco/i prima di poter chiamare.</span>`;
   }
 
-  ['btn-send-offerta','btn-send-cambio','btn-send-carte'].forEach(id => {
+  ['btn-send-offerta','btn-send-cambio','btn-send-carte','btn-send-auto'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = !ready || state.dealSecured;
   });
