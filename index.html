@@ -974,7 +974,7 @@ function checkBellsCue(){
 }
 
 function computeRemainingEV(){
-  const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened && i !== state.playerBoxIndex);
+  const remainingIdx = state.boxes.map((b,i)=>i).filter(i => !state.boxes[i].isOpened);
   if (remainingIdx.length === 0) return 0;
   const sum = remainingIdx.reduce((a,i)=> a + state.boxes[i].value, 0);
   return Math.round(sum / remainingIdx.length);
